@@ -125,83 +125,95 @@ pbi = sql^"""
 
 
 # Ejercicios
+# 1)
 
- consigna    = """pais y pbi
-               """
-               
- 
- consultaSQL = """
-                SELECT DISTINCT p.PBI_2022, a.idPais 
+#obtenemos pbi con nombre de cada pais
+consultaSQL = """
+                SELECT DISTINCT  a.idPais, a.Nombre as Pais,p.PBI_2022
                 from pbi as p, pais as a
                 where p.idPais=a.idPais 
-                Union
-                
+                ORDER BY a.idPais asc
                """
+tabla1= sql^ consultaSQL               
 
- imprimirEjercicio(consigna, [pais,pbi], consultaSQL, sql^consultaSQL)
-
-
-consigna=""" sedes por pais"""
+#cantidad de sedes por pais
 consultaSQL=""" 
-                SELECT idPais ,COUNT(*) as Sedes
-                from sede
+                SELECT  idPais ,COUNT(*) as Sedes
+                FROM sede
                 GROUP BY idPais
-                ORDER BY idPais ASC
+                ORDER BY Sedes DESC
                 
-
             """
 
-imprimirEjercicio(consigna, [sede], consultaSQL, sql^consultaSQL)
-
- 
-consigna=""" secciones promocion"""
-
-consultaAQL=""" SELECT idSede, COUNT(*) as 
-                from secciones
-                
+tabla2= sql^ consultaSQL
 
 
+#unimos pais,sedes y pbi
+consultaSQL="""
+                SELECT DISTINCT Pais,Sedes,PBI_2022
+                FROM tabla1 as t1
+                INNER JOIN tabla2 as t2
+                ON t1.idPais=t2.idPais
+                ORDER BY Sedes desc
 
             """
-imprimirEjercicio(consigna, [secciones], consultaSQL, sql^consultaSQL)            
+tabla3= sql^ consultaSQL                
+
+#Promedio secciones.
+
+#Cantidad de secciones por sede
+consultaSQL= """
+                SELECT idSede,COUNT(*) as cantidadDescripcion
+                FROM secciones as sc
+                GROUP BY idSede
+                
+             """
+cantSec=sql^ consultaSQL
+
+#juntamos cantSet y sede
+
+consultaSQL=""" 
+               SELECT DISTINCT *
+               FROM sede as s
+               INNER JOIN cantSec as c
+               ON s.idSede=c.idSede
+           """
+unionTablas=sql^ consultaSQL
+
+#obtenemos el promedio de secciones por pais
+consultaSQL="""
+                SELECT  idPais ,AVG(cantidadDescripcion) as promedio
+                FROM unionTablas
+                GROUP BY idPais 
+                ORDER BY idPais asc
+               
+            """
+promedioSec=sql^ consultaSQL
+
+#obtenemos nombre de paises y el promedio correspondiente
+
+consultaSQL="""
+               SELECT Nombre,Promedio
+               FROM promedioSec as p
+               INNER JOIN pais as pa
+               ON p.idPais=pa.idPais
+
+            """
+tablaPromPais=sql^ consultaSQL
+
+#Finalmente unimos los datos de la tabla 3 con la de promedioSec
+consultaSQL=""" 
+                SELECT Pais,Sedes,Promedio,PBI_2022
+                FROM tablaPromPais as t
+                INNER JOIN tabla3 as t3
+                ON t3.Pais=t.Nombre
+  
+            """
             
-carpeta=""
+respuesta1=sql^ consultaSQL
 
 
 
 
 
-
-
-# =============================================================================
-# DEFINICION DE FUNCIÓN DE IMPRESIÓN EN PANTALLA
-# =============================================================================
-# Imprime en pantalla en un formato ordenado:
-    # 1. Consigna
-    # 2. Cada dataframe de la lista de dataframes de entrada
-    # 3. Query
-    # 4. Dataframe de salida
-def imprimirEjercicio(consigna, listaDeDataframesDeEntrada, consultaSQL, dataframeResultadoDeConsultaSQL):
-    
-    print("# -----------------------------------------------------------------------------")
-    print("# Consigna: ", consigna)
-    print("# -----------------------------------------------------------------------------")
-    print()
-    for i in range(len(listaDeDataframesDeEntrada)):
-        print("# Entrada 0",i,sep='')
-        print("# -----------")
-        print(listaDeDataframesDeEntrada[i])
-        print()
-    print("# SQL:")
-    print("# ----")
-    print(consultaSQL)
-    print()
-    print("# Salida:")
-    print("# -------")
-    print(dataframeResultadoDeConsultaSQL)
-    print()
-    print("# -----------------------------------------------------------------------------")
-    print("# -----------------------------------------------------------------------------")
-    print()
-    print()
 
