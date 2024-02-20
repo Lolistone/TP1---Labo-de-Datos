@@ -3,7 +3,7 @@
 Trabajo Práctico 1
 
 Materia: Laboratorio de datos - FCEyN - UBA
-Autores  : Martinelli Lorenzo, Padilla Ramiro, 
+Autores  : Martinelli Lorenzo, Padilla Ramiro, Chapana Joselin
 
 """
 
