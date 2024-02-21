@@ -51,6 +51,42 @@ sedeDatosOriginal = sedeDatosOriginal[sedeDatosOriginal['redes_sociales']!='']
 # Como el metodo explode() repite index para una misma fila, procedemos a reiniciar los mismos
 sedeDatosOriginal = sedeDatosOriginal.reset_index(drop=True)
 
+# Renombramos las columnas que nos interesan.
+sedeDatosOriginal.rename(columns = {'sede_id': 'idSede',
+                                    'pais_iso_3': 'idPais',
+                                    'sede_desc_castellano': 'Descripcion', 
+                                    'region_geografica': 'Region',
+                                    'redes_sociales': 'URL'}, inplace = True)
+
+pbisOriginal.rename(columns = {'Country Name': 'Nombre',
+                               'Country Code': 'idPais',
+                               '2022': 'Pbi'}, inplace = True)
+
+seccionesOriginal.rename(columns = {'sede_id': 'idSede',
+                                    'sede_desc_castellano': 'SeccionDescripcion'}, inplace = True)
+
+
+### aca nombramos el problema de calidad que encontramos, no se cual es bien
+### puede ser que hay muchas redes en una sola fila, lo q trae problemas de instancia?
+### Y no se respeta el atributo de calidad: Constancia.
+
+
+### de PBIORIGINAL podemos decir q no se cumple el atributo completitud, faltan datos en 2022
+### posible arreglo? eliminarlos 
+### Otro posible problema, es de relatividad, hay muchos "paises" que son regiones lo cual no es de interes
+
+
+# Seleccionamos las columnas pertinentes a nuestro DER.
+sedeLimpia = sedeDatosOriginal[['idSede', 'idPais', 'Descripcion', 'estado']]
+paisLimpia = pbisOriginal[['idPais', 'Nombre', 'Pbi']] 
+redesLimpia = sedeDatosOriginal[['idSede', 'URL']]
+regionesLimpia = sedeDatosOriginal[['idPais', 'Region']]
+seccionesLimpia = seccionesOriginal[['idSede', 'SeccionDescripcion']]
+
+# Aca deberiamos limpiar los nulls, paises que no son paises, etc. Basicamente terminar de limpiar.
+
+# Convertimos los datos limpios en archivos csv, dejo un ejemplo. 
+sede.to_csv('~/Dropbox/UBA/2024/LaboDeDatos/TP1/Archivos/TablasLimpias/sedeLimpia.csv', index = False)
 
 pais = sql^"""
             SELECT *
