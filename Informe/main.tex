@@ -45,30 +45,31 @@
 %\newgeometry{top=3cm,bottom=3cm,right=3cm,left=3cm} para editar margenes menos del titulo 
 
 
-\section{Resumen}
-este es el resumen
+\section{Resumen} \vspace{0.3cm}
 
+Estuve pensando y aca podriamos contar que fuimos pensando a lo largo del trabajo, los problemas con los que nos encontramos y como fue la dinámica, mas que nada porque la explicacion de la metodologia a seguir está en la parte de introducción.
 
 \section{Introducción} \vspace{0.1cm}
 
-\subsection{Objetivo y Fuente} \vspace{0.1cm}
+\subsection{Objetivo y Fuente} \vspace{0.3cm}
 
-El objetivo principal de este trabajo es encontrar una relación entre la cantidad de sedes de Argentina en un país y su PBI, para esto, trabajaremos con los siguientes datos, 
+El objetivo principal de este trabajo es encontrar una relación entre la cantidad de sedes de Argentina en un país y su PBI, si este será mayor, menor o si influirá la cantidad de secciones que una sede posea.  Para esto, trabajaremos con los siguientes datos, 
 
 \begin{itemize}
 	\item PBI per cápita de los paises (1)
 	\item Representaciones Argentinas en el exterior, donde tenemos, Datos básicos de las sedes, Datos completos de sedes y secciones (2)
 \end{itemize}
 
-\noindent (1) https://data.worldbank.org/indicator/NY.GDP.PCAP.CD \vspace {0.1cm}
+\noindent (1) Extraido de la pagina del Banco Mundial, https://data.worldbank.org/indicator/NY.GDP.PCAP.CD \\
 
-\noindent (2) https://datos.gob.ar/dataset/exterior-representaciones-argentinas \vspace{0.1cm}
+\noindent (2) Obtenidas del Ministerio de Relaciones Exteriores, Comercio Internacional y Culto, \\ https://datos.gob.ar/dataset/exterior-representaciones-argentinas \vspace{0.1cm}
  
-\subsection{Procedimiento}
+\subsection{Procedimiento} \vspace{0.3cm}
 
-\indent Este trabajo tendrá varias etapas, comenzando con el planteo de un Diagrama de Entidad Relacional (DER) adecuado al objetivo de nuestro trabajo, continuando con la elaboración y normalización de un Modelo Relacional. Además, de llevar a cabo una limpieza de los datos utlizando ciertas metricas, en particular, utilizaremos el método GQM. \par
+\indent Este trabajo tendrá varias etapas, comenzando con el planteo de un Diagrama de Entidad Relacional (DER) adecuado al objetivo de nuestro trabajo, es decir, a partir de los datasets mencionados anteriormente, nos quedaremos solo con aquellos datos necesarios para resolver nuestro problema. Luego, pasaremos nuestro DER al modelo relacional, el cual se encontrará en tercera forma normal y especificará claves primarias (PK), claves candidatas (CK), claves foráneas (FK) y dependencias funcionales. \par
+Una vez tengamos nuestro modelo planteado, pasaremos a Python donde realizaremos una limpieza de los datos tomando ciertas decisiones que estarán explicadas hacia el final de este informe. 
+Finalmente, con los datos ya limpios, a traves de distintas librerias como Pandas, Matplotlib, Inlinesql, entre otras nos encargaremos de consultar, manipular y visualizar los datos necesarios para dar con nuestro objetivo.
 
-Una vez tengamos los datos limpios y el modelo normalizado, pasaremos al procesamiento y visualización de datos en Python utilizando librerias como Pandas, Inlinesql, Matplotlib entre otras con el fin de elaborar nuestras conclusiones, ¿Será mayor el PBI de aquellos paises con sedes Argentinas? ¿Influirá la cantidad de sedes y/o secciones de estas?.  
 
 \newpage
 
@@ -81,12 +82,12 @@ relacional.  \vspace{0.2cm}
 
 \begin{figure}[ht]
 	\centering
-	\includegraphics[width=1\textwidth]{DERPBI.png}
+	\includegraphics[width=1\textwidth]{DiagramaFinal.png}
 	\caption{Diagrama de Entidad Relacional}
 	\label{fig:ejemplo}
-\end{figure}
+\end{figure} \vspace{0.3cm}
 
-Como se puede ver en la Figure 1, consideramos que,
+Como se puede ver en la imagen anterior, consideramos que,
 
 \begin{itemize}
 	\item Una sede esta en un país y solo en uno.
@@ -104,9 +105,7 @@ Como se puede ver en la Figure 1, consideramos que,
 
 Una vez que tenemos nuestro esquema gráfico, pasamos al planteo del modelo relacional. Notar que, las flechas representan las Foreign Keys y aquellos atributos 
 subrayados representan las Primary Keys. En todas las relaciones, exceptuando a País, las Claves coinciden con las claves candidatas, esto se debe a que en País consideramos también a 
-nombrePais como una posible clave. \par
-Otro detalle a tomar en cuenta, es que decidimos separar la relación País(IdPais, región, nombre, Pbi) puesto que perdiamos la 2FN a raíz de que 
-al ser nombre una clave candidata, región y Pbi dependian parcialmente de la clave primaria. \vspace{0.4cm}
+nombrePais como una posible clave.  \vspace{0.4cm}
 
 \newbox\ubox
 
@@ -168,7 +167,8 @@ al ser nombre una clave candidata, región y Pbi dependian parcialmente de la cl
 % \node[EMP node] (dm) at (0,0) {{Sometext/EMP,another/EMP}};
   \Frame(0,0){3}[PAIS]{
     IdPais/EMP,
-    NombrePais/NOR};
+    NombrePais/NOR,
+    Pbi/NOR};
 
  \Frame(0,-2.5){1}[SEDE]{%first frame identified as 1 named EMPLOYEE
     IdSede/EMP,% see that it is necessary to add a space
@@ -187,10 +187,6 @@ al ser nombre una clave candidata, región y Pbi dependian parcialmente de la cl
   \Frame(0,-10){5}[SECCIONES]{
     IdSede/EMP,
     SeccionDescripcion/EMP};     
-
- \Frame(0,-12.5){6}[PBI]{
-    IdPais/EMP,
-    PBI-2022/NOR,}; 
 
 % Start drawing arrows:
 % In this part I use the named coordinates to draw the arrows.
@@ -219,21 +215,18 @@ al ser nombre una clave candidata, región y Pbi dependian parcialmente de la cl
         -- (IdPais1 -| inter) -- ++(0,-0.4) coordinate (inter)  % to calculate intersections.
         -- (IdPais1 |- inter) --++(0,0.45); %
 
-    \draw[thick,<-,thick,>=latex] % From Essn6 to Ssn1  
-        (IdPais3)++(-0.2,0) -- ++(0,-.85) -- ++(5.8,0) coordinate (inter) %inter is the name of coordinate register
-        -- (IdPais6 -| inter) -- ++(0,-0.4) coordinate (inter)  % to calculate intersections.
-        -- (IdPais6 |- inter) --++(0,0.45); %
+ 
+\end{tikzpicture} \vspace{0.4cm}
 
-        
-\end{tikzpicture} \vspace{0.2cm}
+Ahora, solo resta mostrar las dependencias funcionales de este modelo relacional para dejar en claro que se encuentra en la forma normal deseada (3FN) y, también tener completo nuestro esquema para asi comenzar a manipular los datos.
 
 \newpage
 
-\subsection{Normalización} \vspace{0.1cm}
+\subsection{Dependencias Funcionales} \vspace{0.1cm}
 
-Con los datos aún sin limpiar, nuestro modelo no está en 1FN, pues tiene columnas con varios datos en cada celda, por ejemplo, 
-todas las redes sociales de una sede aparecen en una misma celda separadas por "//". Sin embargo, podemos mostrar nuestro modelo respeta la 2FN Y 3FN. 
-Para esto, veamos sus dependecias funcionales. \vspace{0.2cm}
+A continuación, mostramos las dependencias funcionales de las relaciones de nuestro modelo relacional. En esta, se puede apreciar que 
+todas se encuentran en segunda y tercera formal. Luego, con la limpieza de datos, garantizaremos que todos sus atributos sean atómicos
+y por ende se encuentre también en primera forma normal.  \vspace{0.3cm}
 
 \depstyle{lvl}{%
     edge height=2.5ex,
@@ -282,36 +275,7 @@ Para esto, veamos sus dependecias funcionales. \vspace{0.2cm}
     \depedge[lvl=1]{1}{3}{}
     \depedge[lvl=1]{1}{4}{}
 \end{dependency} \vspace{0.3cm}
-
-Veamos que la unica dependencia funcional que tenemos es, \vspace{0.3cm}
-
- idSede $\rightarrow$ $\{$idPaís, Descipción, Estado$\}$ \vspace{0.3cm}
-
-Puesto que con el id de un País no podemos inferir la descripción de una sede en particular ni su estado. Tampoco podemos inferir los demas atributos
-a partir de la descripción de una sede pues consideramos que podria haber descripciones repetidas o faltantes y no son suficiente para identificarlas. 
-Por lo tanto, tenemos que todos los atributos no primos dependen de la Clave Primaria y está en 2FN, mas aún, está en 3FN. Notar además, que la DF es minimal puesto
-que posee un solo atributo en su lado izquierdo. \vspace{0.3cm}
-
-El detalle comentando en el modelo relacional en cuanto a la estructura y el porque de nuestra elección se puede ver en la siguiente tabla. \vspace{0.3cm}
-
-\textbf{País} 
- \vspace{0.1cm}
-
-\begin{dependency}
-    \raggedright
-    \begin{deptext}[TxtBook] % Applying the TxtBook style.
-        \textbf{\underline{idPaís}}  \& NombrePaís \& Región \& PBI  \\
-    \end{deptext}
-    \depedge[lvl=1]{1}{2}{}
-    \depedge[lvl=1]{1}{3}{}
-    \depedge[lvl=1]{1}{4}{}
-    \depedge[lvl=2]{2}{3}{}
-    \depedge[lvl=2]{2}{4}{}
-\end{dependency} \vspace{0.3cm}
-
-Es fácil notar que con la DF mas externa, estamos perdiendo la 2FN y por ende la 3FN, puesto que tenemos atributos no primos que dependen parcialmente de la clave primaria.
-Por lo tanto, nuestra solución fue dividir en tablas como se muestra a continuación, \vspace{0.3cm}
-
+ \vspace{0.3cm}
 
 \textbf{País} 
 \vspace{0.1cm}
@@ -319,9 +283,12 @@ Por lo tanto, nuestra solución fue dividir en tablas como se muestra a continua
 \begin{dependency}
     \raggedright
     \begin{deptext}[TxtBook] % Applying the TxtBook style.
-        \textbf{\underline{idPaís}}  \& NombrePaís\\
+        \textbf{\underline{idPaís}}  \& NombrePaís \&Pbi \\
     \end{deptext}
     \depedge[lvl=1]{1}{2}{}
+    \depedge[lvl=1]{1}{3}{}
+    \depedge[lvl=2]{2}{1}{}
+    \depedge[lvl=2]{2}{3}{}
 \end{dependency} \vspace{0.3cm}
 
 \textbf{Región} 
@@ -333,21 +300,7 @@ Por lo tanto, nuestra solución fue dividir en tablas como se muestra a continua
         \textbf{\underline{idPaís}} \& Región  \\
     \end{deptext}
     \depedge[lvl=1]{1}{2}{}
-\end{dependency} \vspace{0.3cm}
-
-
-\textbf{PBI} 
-\vspace{0.1cm}
-
-\begin{dependency}
-    \raggedright
-    \begin{deptext}[TxtBook] % Applying the TxtBook style.
-        \textbf{\underline{idPaís}} \& PBI  \\
-    \end{deptext}
-    \depedge[lvl=1]{1}{2}{}
 \end{dependency} 
-
-De esta manera, estamos respetando la 2FN puesto que dependemos completamente de la PK y, en 3FN pues idPais es SK en todas las relaciones . Además, las DF detalladas son minimales puesto que dependen de un solo atributo.
 
 \vspace{3mm}
 \textbf{Sección} 
@@ -357,7 +310,11 @@ De esta manera, estamos respetando la 2FN puesto que dependemos completamente de
     \begin{deptext}[TxtBook] % Applying the TxtBook style.
         \textbf{\underline{IdSede}}  \& \textbf{\underline{Sección}}  \\
     \end{deptext}
-\end{dependency}
+    \depedge[lvl=1]{1}{2}{}
+    \depedge[lvl=1]{2}{1}{}
+\end{dependency} \vspace{0.1cm}
+
+Observación: la única DF es $\{$IdSede, Sección$\} \rightarrow \{$IdSede, Sección$\}$
 
 \vspace{3mm}
 \textbf{Redes} 
@@ -370,10 +327,7 @@ De esta manera, estamos respetando la 2FN puesto que dependemos completamente de
 	\depedge[lvl=1]{2}{1}{}
 \end{dependency} \vspace{0.3cm}
 
-Notemos que en Sección relaciones no podemos establecer dependendencias funcionales puesto que solo con el IdSede yo no puedo inferir una sección, y tampoco
-puedo realizar el camino inverso. Por otro lado, en Redes si puedo determinar la sede a partir de su url sin embargo, no puedo hacer el camino inverso pues tengo más de
-una url asociada a una unica sede.  \par
-Una vez hecha la aclaración, podemos ver que Sección esta en 3FN pues no posee DF. Y, por otro lado, Redes está también en 3FN pues IdSede es un atributo primo.
+\subsection{Importación de Datos} \vspace{0.3cm}
 
 \section{Decisiones tomadas}
 
