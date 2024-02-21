@@ -274,3 +274,39 @@ resultadoEJiii = sql^"""
                             GROUP BY rt.idPais
                         """
 
+#GRAFICOS
+#i)
+#juntamos datos importantes de las tablas region y sede
+consultaSQL=""" 
+                SELECT r.Region
+                FROM regiones as r
+                INNER JOIN sede as s
+                ON r.idPais=s.idPais
+                ORDER BY Region ASC
+               
+            """
+tRegiones= sql^ consultaSQL
+
+#Genera el grafico de frecuencia
+
+tRegiones["Region"].value_counts().plot.bar()
+
+
+# Genera el grafico de frecuencias (mejorando la informacion mostrada)
+fig, ax = plt.subplots()
+
+rcParams['axes.spines.right'] = True       # Elimina linea derecha  del recuadro
+rcParams['axes.spines.left']  = False       # Elimina linea derecha  del recuadro
+rcParams['axes.spines.top']   = False        # Elimina linea superior del recuadro
+
+
+ax = tRegiones["Region"].value_counts().plot.bar(color="purple")
+
+# Agrega titulo, etiquetas a los ejes y limita el rango de valores de los ejes
+ax.set_title("Cantidad de sedes por Region",fontsize=17)
+ax.set_yticks([])                                  # Remueve los ticks del eje y
+ax.bar_label(ax.containers[0], fontsize=8)         # Agrega la etiqueta a cada barra
+#ax.tick_params(axis='x', labelrotation=0)         # Rota las etiquetas del eje x para que las muestre horizontales
+plt.xlabel("Región")
+plt.ylabel("Cantidad")
+   
