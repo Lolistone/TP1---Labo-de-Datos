@@ -2,7 +2,7 @@
 """
 Trabajo Práctico 1
 
-Materia: Laboratorio de datos - FCEyN - UBA
+Materia : Laboratorio de datos - FCEyN - UBA
 Autores  : Martinelli Lorenzo, Padilla Ramiro, Chapana Joselin
 
 """
@@ -10,16 +10,14 @@ Autores  : Martinelli Lorenzo, Padilla Ramiro, Chapana Joselin
 import pandas as pd
 from inline_sql import sql, sql_val
 
-carpeta = "~/Dropbox/UBA/2024/LaboDeDatos/TP1/Tabla_Limp/TablasOriginales/" 
-
+carpeta = "~/Dropbox/UBA/2024/LaboDeDatos/TP1/Archivos/TablasOriginales/" 
 
 # Creamos los Dataframes vacios.
-pais = pd.DataFrame(columns = ["idPais", "Nombre"])
-sede = pd.DataFrame(columns=["idSede","idPais","Descripcion","Estado"])
+pais = pd.DataFrame(columns = ['idPais', 'Nombre', 'Pbi'])
+sede = pd.DataFrame(columns=['idSede','idPais','Descripcion','estado'])
 redes = pd.DataFrame(columns = ["idSede","URL"])
 regiones = pd.DataFrame(columns = ['idPais', 'Region'])
-secciones = pd.DataFrame(columns=["idSede","SeccionDescripcion"])
-pbi = pd.DataFrame(columns = ["idPais", "PBI_2022"])
+secciones = pd.DataFrame(columns=['idSede','SeccionDescripcion'])
 
 # Importamos los datos originales.
 seccionesOriginal = pd.read_csv(carpeta+"lista-secciones.csv")
@@ -32,14 +30,11 @@ atributos = [*pd.read_csv(carpeta+"lista-sedes-datos.csv", nrows=1)]
 sedeDatosOriginal = pd.read_csv(carpeta+"lista-sedes-datos.csv", usecols= [i for i in range(len(atributos))])
 
 
-#%% Limpieza de Datos
+# Limpieza de Datos 
 
-# Normalizamos la siguiente tabla, la cual corresponde a 'lista-sedes-datos.csv', puesto que en la columna redes_sociales
-# posee valores que no son atómicos.
+# Pasamos a 1FN la siguiente tabla, puesto que en la columna redes_sociales posee valores que no son atómicos.
 sedeDatosOriginal['redes_sociales'] = sedeDatosOriginal['redes_sociales'].str.split('  //  ')
 sedeDatosOriginal = sedeDatosOriginal.explode('redes_sociales')
-
-# sedeLimpio = sedeLimpio.drop_duplicates()  ACA BORRA UNA ENTRADA (embajada de qatar)
 
 # Eliminamos las filas con red_social = ' ' creada sin intencion en el paso anterior
 sedeDatosOriginal = sedeDatosOriginal[sedeDatosOriginal['redes_sociales']!='']
@@ -47,16 +42,38 @@ sedeDatosOriginal = sedeDatosOriginal[sedeDatosOriginal['redes_sociales']!='']
 # Como el metodo explode() repite index para una misma fila, procedemos a reiniciar los mismos
 sedeDatosOriginal = sedeDatosOriginal.reset_index(drop=True)
 
-### aca nombramos el problema de calidad que encontramos, no se cual es bien
-### puede ser que hay muchas redes en una sola fila, lo q trae problemas de instancia?
-### 
+# Renombramos las columnas que nos interesan.
+sedeDatosOriginal.rename(columns = {'sede_id': 'idSede',
+                                    'pais_iso_3': 'idPais',
+                                    'sede_desc_castellano': 'Descripcion', 
+                                    'region_geografica': 'Region',
+                                    'redes_sociales': 'URL'}, inplace = True)
+
+pbisOriginal.rename(columns = {'Country Name': 'Nombre',
+                               'Country Code': 'idPais',
+                               '2022': 'Pbi'}, inplace = True)
+
+seccionesOriginal.rename(columns = {'sede_id': 'idSede',
+                                    'sede_desc_castellano': 'SeccionDescripcion'}, inplace = True)
 
 
-### de PBIORIGINAL podemos decir q no se cumple el atributo completitud, faltan datos en 2022
-### posible arreglo? eliminarlos 
 
+# Seleccionamos las columnas pertinentes a nuestro DER.
+sedeLimpia = sedeDatosOriginal[['idSede', 'idPais', 'Descripcion', 'estado']]
+paisLimpia = pbisOriginal[['idPais', 'Nombre', 'Pbi']] 
+redesLimpia = sedeDatosOriginal[['idSede', 'URL']]
+regionesLimpia = sedeDatosOriginal[['idPais', 'Region']]
+seccionesLimpia = seccionesOriginal[['idSede', 'SeccionDescripcion']]
+
+# Aca deberiamos limpiar los nulls, paises que no son paises, etc. Basicamente terminar de limpiar.
+
+# Convertimos los datos limpios en archivos csv, dejo un ejemplo. 
+sede.to_csv('~/Dropbox/UBA/2024/LaboDeDatos/TP1/Archivos/TablasLimpias/sedeLimpia.csv', index = False)
 
 # Importamos los datos (ya limpios) 
+
+# Teniendo los csv limpios podriamps importarlos de la carpeta, o sino, laburar directamente con los 
+# creados unas lineas mas arriba.
 
 # no entiendo bien como importar, esta bien asi?
 
