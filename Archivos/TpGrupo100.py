@@ -9,6 +9,8 @@ Autores  : Martinelli Lorenzo, Padilla Ramiro, Chapana Joselin
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import six
 from inline_sql import sql, sql_val
 
 
@@ -80,8 +82,12 @@ paisLimpia.drop(paisLimpia[paisLimpia['idPais'].apply(lambda x: x in no_son_pais
 # Eliminamos de paises también aquellos paises sin Pbi, es decir, con valor Null.
 paisLimpia.dropna(subset = ['Pbi'], inplace = True)
 
+# Eliminamos duplicados de región.
+regionesLimpia = regionesLimpia.drop_duplicates()
+
 # Convertimos los datos limpios en archivos csv, dejo un ejemplo. Insertar la ruta donde desean tener las tablas limpias.
 TablasLimpias = '~/Dropbox/UBA/2024/LaboDeDatos/TP1/Archivos/TablasLimpias/'
+
 
 sedeLimpia.to_csv(TablasLimpias + 'sede.csv', index = False)
 paisLimpia.to_csv(TablasLimpias + 'pais.csv', index = False)
@@ -146,9 +152,9 @@ consultaSQL="""
            
 promedio_secciones =sql^ consultaSQL
 
-# Juntamos los datos
+# Juntamos los datos, utilice round para mas porlijidad al mostrar las tablas en el informe.
 consultaSQL = """ 
-                SELECT Nombre, Sedes, p.Promedio, Pbi
+                SELECT Nombre, Sedes, ROUND(p.Promedio, 2) AS Promedio, ROUND(Pbi) AS Pbi
                 FROM promedio_secciones AS p
                 INNER JOIN sedes_pbi AS s
                 ON s.idPais = p.idPais
@@ -158,63 +164,92 @@ result = sql^ consultaSQL
 
 # ii)
 
-# El promedio no se ve afectado por valors NULL de PBI, creo por AVG() lo salva
-# Se puede agregar con WHERE p.PBI_2022 IS NOT NULL, pero es lo mismo
-paises_conAlmenos_1SedeyPBI = sql^ """
-                                SELECT DISTINCT s.idPais,
-                                                r.region,     
-                                                p.PBI_2022
-                                FROM sede AS s
-                                LEFT OUTER JOIN regiones AS r
-                                ON s.idPais = r.idPais
-                                LEFT OUTER JOIN pbi AS p    
-                                ON s.idPais = p.idPais                                                            
-                            """
+# Agrego las regiones a la tabla que ya tenia con los paises, su cantidad de sedes (estan aquellos con al menos una) y su pbi.
+consultaSQL = """
+                SELECT DISTINCT r.region, COUNT(*) AS Sedes, AVG(p.Pbi) Pbi_Promedio
+                FROM sedes_pbi AS p
+                INNER JOIN regiones AS r
+                ON r.idPais = p.idPais
+                GROUP BY region
+                ORDER BY region DESC
+              """
 
-resultadoEJii = sql^"""
-                        SELECT Region AS "Región geográfica",
-                                COUNT(*) AS "Paises Con Sedes Argentinas",
-                                AVG(PBI_2022) AS "Promedio PBI per Cápita 2022 (U$S)" 
-                        FROM paises_conAlmenos_1Sede_ConPBI
-                        GROUP BY Region
-                        ORDER BY "Promedio PBI per Cápita 2022 (U$S)" DESC;
-                    """
+region_pais_pbi = sql^ consultaSQL
 
 # iii)
 
-redes_segunPais = sql^"""
-                        SELECT r.*,
-                                s.idPais
-                        FROM redes AS r, sede AS s
-                        WHERE r.idSede = s.idSede
-                    """
+# Recuperamos paises sin redes sociales, y de paso pegamos la URL al nombre del Pais
+consultaSQL = """
+                SELECT DISTINCT s.idSede, s.idPais, r.URL
+                       FROM redes AS r 
+                       RIGHT OUTER JOIN sede AS s
+                       ON r.idSede = s.idSede
+              """
 
-# No encontre otra manera que hacerlo MANUAL
-redes_Tipos = sql^"""
-                        SELECT DISTINCT r.idPais,
+pais_redes = sql^ consultaSQL
+
+
+# Clasificamos por redes
+consultaSQL = """
+                SELECT DISTINCT r.idPais,
+                                r.idSede,
                                 CASE 
-                                   WHEN LOWER(r.URL) LIKE '%facebook%' THEN 'Facebook'
-                                   WHEN LOWER(r.URL) LIKE '%twitter%' THEN 'Twitter'
-                                   WHEN LOWER(r.URL) LIKE '%linkedin%' THEN 'LinkedIn'
-                                   WHEN LOWER(r.URL) LIKE '%instagram%' THEN 'Instagram'
-                                   WHEN LOWER(r.URL) LIKE '%youtube%' THEN 'Youtube'
-                                   WHEN LOWER(r.URL) LIKE '%flickr%' THEN 'Flickr'
-                                   ELSE 'SinRedSocial'
-                               END AS tipo_red
-                        FROM redes_segunPais AS r
-                    """
+                                    WHEN LOWER(r.URL) LIKE '%facebook%' THEN 'Facebook'
+                                    WHEN LOWER(r.URL) LIKE '%twitter%' THEN 'Twitter'
+                                    WHEN LOWER(r.URL) LIKE '%linkedin%' THEN 'LinkedIn'
+                                    WHEN LOWER(r.URL) LIKE '%instagram%' OR LOWER(r.URL) LIKE '@_%' THEN 'Instagram'
+                                    WHEN LOWER(r.URL) LIKE '%youtube%' THEN 'Youtube'
+                                    WHEN LOWER(r.URL) LIKE '%flickr%' THEN 'Flickr'
+                                    ELSE 'SinRedSocial'
+                               END AS tipo_red,
+                               r.URL
+                FROM pais_redes AS r
+              """
+              
+redes_tipos = sql^ consultaSQL
 
-# Solo resta contar, decidimos que los paies categorizados 'SinRedSocial' tengan 0 tipos redes
-resultadoEJiii = sql^"""
-                            SELECT rt.idPais,
-                                    COUNT(CASE 
-                                              WHEN (rt.tipo_red !='SinRedSocial') THEN 1 
-                                              ELSE NULL 
-                                          END
-                                         ) AS "Cantidad de tipos de red social"
-                            FROM redes_Tipos AS rt
-                            GROUP BY rt.idPais
-                        """
+# Solo resta contar, decidimos que los paies categorizados 'SinRedSocial' tengan 0 tipos redes.
+consultaSQL = """
+                SELECT idPais,
+                       CASE WHEN (tipo_red != 'SinRedSocial') THEN 1 
+                             ELSE 0 
+                       END AS cantidad
+                FROM redes_tipos
+                GROUP BY idPais, tipo_red
+              """
+
+cantidad_redes = sql^ consultaSQL
+
+# Antes agrupe pais - tipo de red, y si esta era válida agregaba un 1, sino un 0. Resta entonces sumar.
+consultaSQL = """
+                SELECT p.Nombre,
+                       SUM(r.cantidad) AS "Cantidad de tipos de red social"
+                FROM cantidad_redes AS r
+                INNER JOIN pais AS p
+                ON p.idPais = r.idPais
+                GROUP BY p.Nombre
+              """
+
+redes_por_pais = sql^ consultaSQL
+
+
+# iv)
+
+# Uno sede al df redes_tipos que ya tenia antes con el nombre del pais. No considero a aquellos paises sin redes.
+consultaSQL = """
+                SELECT DISTINCT p.Nombre AS Pais,
+                                r.idSede AS Sede,
+                                r.tipo_red AS "Red Social",
+                                r.URL
+                FROM redes_tipos AS r
+                INNER JOIN pais AS p
+                ON p.idPais = r.idPais
+                WHERE r.tipo_red != 'SinRedSocial'
+                ORDER BY Pais, Sede, "Red Social", URL
+              """
+
+pais_sede_red = sql^ consultaSQL
+
 
 #GRAFICOS
 #i)
@@ -252,3 +287,28 @@ ax.bar_label(ax.containers[0], fontsize=8)         # Agrega la etiqueta a cada b
 plt.xlabel("Región")
 plt.ylabel("Cantidad")
    
+#%% Funcion Auxiliar para graficar las tablas
+def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=14,
+                     header_color='#40466e', row_colors=['#f1f1f2', 'w'], edge_color='w',
+                     bbox=[0, 0, 1, 1], header_columns=0,
+                     ax=None, **kwargs):
+    if ax is None:
+        size = (np.array(data.shape[::-1]) + np.array([0, 1])) * np.array([col_width, row_height])
+        fig, ax = plt.subplots(figsize=size)
+        ax.axis('off')
+
+    mpl_table = ax.table(cellText=data.values, bbox=bbox, colLabels=data.columns, **kwargs)
+
+    mpl_table.auto_set_font_size(False)
+    mpl_table.set_fontsize(font_size)
+
+    for k, cell in six.iteritems(mpl_table._cells):
+        cell.set_edgecolor(edge_color)
+        if k[0] == 0 or k[1] < header_columns:
+            cell.set_text_props(weight='bold', color='w')
+            cell.set_facecolor(header_color)
+        else:
+            cell.set_facecolor(row_colors[k[0]%len(row_colors) ])
+    return ax
+
+render_mpl_table(result, header_columns=0, col_width=4.0)
