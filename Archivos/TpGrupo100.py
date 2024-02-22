@@ -10,6 +10,7 @@ Autores  : Martinelli Lorenzo, Padilla Ramiro, Chapana Joselin
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from   matplotlib import ticker   # Para agregar separador de miles 
 import six
 from inline_sql import sql, sql_val
 
@@ -119,12 +120,14 @@ consultaSQL = """
 sedes_por_pais = sql^ consultaSQL
 
 
-# Unimos pais, sedes y pbi. Estoy perdiendo ~5 paises, deduzco que el motivo es que
-# al borrar los pbi que figuraban como Null estos desaparecieron.
+# Unimos pais, sedes y pbi. Utilizo un Outer Join para recuperar aquellos paises sin sedes.
 consultaSQL = """
-                SELECT DISTINCT p.idPais, Nombre, Sedes, Pbi
+                SELECT DISTINCT p.idPais, 
+                                  Nombre, 
+                                  CASE WHEN Sedes IS NULL THEN 0 ELSE Sedes END AS Sedes, 
+                                  Pbi
                 FROM pais AS p
-                INNER JOIN sedes_por_pais AS sp
+                LEFT OUTER JOIN sedes_por_pais AS sp
                 ON p.idPais = sp.idPais
                 ORDER BY Sedes DESC
               """
@@ -154,9 +157,12 @@ promedio_secciones =sql^ consultaSQL
 
 # Juntamos los datos, utilice round para mas porlijidad al mostrar las tablas en el informe.
 consultaSQL = """ 
-                SELECT Nombre, Sedes, ROUND(p.Promedio, 2) AS Promedio, ROUND(Pbi) AS Pbi
+                SELECT Nombre, 
+                        Sedes,
+                        CASE WHEN p.Promedio is NULL THEN 0 ELSE ROUND(p.Promedio, 2) END AS Promedio, 
+                        ROUND(Pbi) AS Pbi
                 FROM promedio_secciones AS p
-                INNER JOIN sedes_pbi AS s
+                RIGHT OUTER JOIN sedes_pbi AS s
                 ON s.idPais = p.idPais
             """
             
@@ -171,7 +177,7 @@ consultaSQL = """
                 INNER JOIN regiones AS r
                 ON r.idPais = p.idPais
                 GROUP BY region
-                ORDER BY region DESC
+                ORDER BY Sedes DESC
               """
 
 region_pais_pbi = sql^ consultaSQL
@@ -251,42 +257,36 @@ consultaSQL = """
 pais_sede_red = sql^ consultaSQL
 
 
-#GRAFICOS
-#i)
-#juntamos datos importantes de las tablas region y sede
-consultaSQL=""" 
-                SELECT r.Region
-                FROM regiones as r
-                INNER JOIN sede as s
-                ON r.idPais=s.idPais
-                ORDER BY Region ASC
-               
-            """
-tRegiones= sql^ consultaSQL
+#%% Gráficos
 
-#Genera el grafico de frecuencia
-
-tRegiones["Region"].value_counts().plot.bar()
-
-
-# Genera el grafico de frecuencias (mejorando la informacion mostrada)
+# Cantidad de Sedes por Region
 fig, ax = plt.subplots()
 
-rcParams['axes.spines.right'] = True       # Elimina linea derecha  del recuadro
-rcParams['axes.spines.left']  = False       # Elimina linea derecha  del recuadro
-rcParams['axes.spines.top']   = False        # Elimina linea superior del recuadro
+plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['axes.spines.right']  = False           
+plt.rcParams['axes.spines.left']   = True            
+plt.rcParams['axes.spines.top']    = False
+plt.rcParams['axes.spines.bottom'] = True  
+
+    
+ax.bar(data = region_pais_pbi, 
+       x = 'Region', 
+       height='Sedes',
+       width = 0.9,
+       color = 'slateblue')
+
+ax.set_title('Cantidad de Sedes por Región')
+ax.set_xlabel('Región', fontsize = 12)                       
+ax.set_ylabel('Sedes', fontsize= 12)
+plt.xticks(rotation=90)
+ax.bar_label(ax.containers[0], fontsize=8)
+ax.set_ylim(0, 30)                         
+
+ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"));
+
+# 
 
 
-ax = tRegiones["Region"].value_counts().plot.bar(color="purple")
-
-# Agrega titulo, etiquetas a los ejes y limita el rango de valores de los ejes
-ax.set_title("Cantidad de sedes por Region",fontsize=17)
-ax.set_yticks([])                                  # Remueve los ticks del eje y
-ax.bar_label(ax.containers[0], fontsize=8)         # Agrega la etiqueta a cada barra
-#ax.tick_params(axis='x', labelrotation=0)         # Rota las etiquetas del eje x para que las muestre horizontales
-plt.xlabel("Región")
-plt.ylabel("Cantidad")
-   
 #%% Funcion Auxiliar para graficar las tablas
 def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=14,
                      header_color='#40466e', row_colors=['#f1f1f2', 'w'], edge_color='w',
