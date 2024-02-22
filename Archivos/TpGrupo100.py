@@ -164,6 +164,7 @@ consultaSQL = """
                 FROM promedio_secciones AS p
                 RIGHT OUTER JOIN sedes_pbi AS s
                 ON s.idPais = p.idPais
+                ORDER BY Sedes DESC, Nombre ASC
             """
             
 result = sql^ consultaSQL
