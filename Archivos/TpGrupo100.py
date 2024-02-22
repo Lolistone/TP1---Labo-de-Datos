@@ -8,20 +8,21 @@ Autores  : Martinelli Lorenzo, Padilla Ramiro, Chapana Joselin
 """
 
 import pandas as pd
+import numpy as np
 from inline_sql import sql, sql_val
 
-<<<<<<< HEAD
+
 carpeta = "~/Dropbox/UBA/2024/LaboDeDatos/TP1/Archivos/TablasOriginales/" 
-=======
-carpeta = "~/Dropbox/UBA/2024/LaboDeDatos/TP1/Tabla_Limp/TablasOriginales/" 
->>>>>>> c331297d6401dc91ae2b74aa20dd4c536c5c64b9
 
 # Creamos los Dataframes vacios.
 pais = pd.DataFrame(columns = ['idPais', 'Nombre', 'Pbi'])
-sede = pd.DataFrame(columns=['idSede','idPais','Descripcion','estado'])
+sede = pd.DataFrame(columns=['idSede','idPais','Descripcion'])
 redes = pd.DataFrame(columns = ["idSede","URL"])
 regiones = pd.DataFrame(columns = ['idPais', 'Region'])
 secciones = pd.DataFrame(columns=['idSede','SeccionDescripcion'])
+
+
+#%% Limpieza de Datos 
 
 # Importamos los datos originales.
 seccionesOriginal = pd.read_csv(carpeta+"lista-secciones.csv")
@@ -32,24 +33,6 @@ pbisOriginal = pd.read_csv(carpeta+"API_NY.GDP.PCAP.CD_DS2_en_csv_v2_73.csv", sk
 # Existe un atributo fuera de rango, lo solucionamos obviandolo.
 atributos = [*pd.read_csv(carpeta+"lista-sedes-datos.csv", nrows=1)]
 sedeDatosOriginal = pd.read_csv(carpeta+"lista-sedes-datos.csv", usecols= [i for i in range(len(atributos))])
-
-
-# Limpieza de Datos 
-
-# Pasamos a 1FN la siguiente tabla, puesto que en la columna redes_sociales posee valores que no son atómicos.
-sedeDatosOriginal['redes_sociales'] = sedeDatosOriginal['redes_sociales'].str.split('  //  ')
-sedeDatosOriginal = sedeDatosOriginal.explode('redes_sociales')
-
-# Eliminamos las filas con red_social = ' ' creada sin intencion en el paso anterior
-sedeDatosOriginal = sedeDatosOriginal[sedeDatosOriginal['redes_sociales']!='']
-
-# Esto por si filtramos las redes que solo son URLS, (eliminamos los @ y cualquier otro texto) 
-# CONSERVAMOS los nulls?  si no, con na=False se eliminan tmbn, tambien podemos pasar de 'nan' a 'sinredsocial'
-# sedeDatosOriginal = sedeDatosOriginal[sedeDatosOriginal['redes_sociales'].str.contains('.com', case=False, na=True)]
-# AUNQUE LUEGO LO HICE EN LA CONSULTA SQL
-
-# Como el metodo explode() repite index para una misma fila, procedemos a reiniciar los mismos
-sedeDatosOriginal = sedeDatosOriginal.reset_index(drop=True)
 
 # Renombramos las columnas que nos interesan.
 sedeDatosOriginal.rename(columns = {'sede_id': 'idSede',
@@ -65,179 +48,113 @@ pbisOriginal.rename(columns = {'Country Name': 'Nombre',
 seccionesOriginal.rename(columns = {'sede_id': 'idSede',
                                     'sede_desc_castellano': 'SeccionDescripcion'}, inplace = True)
 
-
-### aca nombramos el problema de calidad que encontramos, no se cual es bien
-### puede ser que hay muchas redes en una sola fila, lo q trae problemas de instancia?
-### Y no se respeta el atributo de calidad: Constancia.
-
-
-### de PBIORIGINAL podemos decir q no se cumple el atributo completitud, faltan datos en 2022
-### posible arreglo? eliminarlos 
-### Otro posible problema, es de relatividad, hay muchos "paises" que son regiones lo cual no es de interes
-
-
 # Seleccionamos las columnas pertinentes a nuestro DER.
-sedeLimpia = sedeDatosOriginal[['idSede', 'idPais', 'Descripcion', 'estado']]
+sedeLimpia = sedeDatosOriginal[['idSede', 'idPais', 'Descripcion']]
 paisLimpia = pbisOriginal[['idPais', 'Nombre', 'Pbi']] 
 redesLimpia = sedeDatosOriginal[['idSede', 'URL']]
 regionesLimpia = sedeDatosOriginal[['idPais', 'Region']]
 seccionesLimpia = seccionesOriginal[['idSede', 'SeccionDescripcion']]
 
-# Aca deberiamos limpiar los nulls, paises que no son paises, etc. Basicamente terminar de limpiar.
+# Pasamos a 1FN el dataframe Redes.
+redesLimpia['URL'] = redesLimpia['URL'].str.split('  //  ')
+redesLimpia = redesLimpia.explode('URL')
 
-# Convertimos los datos limpios en archivos csv, dejo un ejemplo. 
-sede.to_csv('~/Dropbox/UBA/2024/LaboDeDatos/TP1/Archivos/TablasLimpias/sedeLimpia.csv', index = False)
+# Eliminamos las filas con red_social = ' ' creada sin intencion en el paso anterior
+redesLimpia = redesLimpia[redesLimpia['URL']!='']
 
-pais = sql^"""
-            SELECT *
-            FROM pais
-            UNION
-            SELECT pbi."Country Code",
-                    pbi."Country Name"
-            FROM pbisOriginal AS pbi
-            """
+# Eliminamos inconsistencias de las Url, quedandonos con aquellos que poseian .com o arroba.
+redesLimpia = redesLimpia[redesLimpia['URL'].str.contains('@|.com', case = False, na=False)]
 
-# Aplicamos UNION (sin ALL) para eliminar tuplas duplicadas al haber separado las redes sociales
-sede = sql^"""
-            SELECT *
-            FROM sede
-            UNION
-            SELECT sdo.sede_id,
-                    sdo.pais_iso_3,
-                    sdo.sede_desc_castellano,
-                    sdo.estado
-            FROM sedeDatosOriginal AS sdo
-            """
+# El metodo explode() repite index para una misma fila y por otro lado, contains borra los indices. Los reseteamos.
+redesLimpia = redesLimpia.reset_index(drop=True)
 
-# Ya borramos duplicados antes
-redes = sql^"""
-            SELECT *
-            FROM redes
-            UNION
-            SELECT sdo.sede_id,
-                    sdo.redes_sociales
-            FROM sedeDatosOriginal AS sdo
-            """
+# Eliminamos de paises todos aquellos que no lo son. La lista a continuacion fue escrita manualmente.
+no_son_paises = ['AFE', 'AFW', 'ARB', 'CAF', 'CEB', 'EAR', 'EAS', 'TEA', 'EAP', 'EMU', 'ECS', 'TEC', 'ECA',
+                 'EUU', 'FCS', 'HPC', 'HIC', 'IBD', 'IBT', 'IDB', 'IDX', 'IDA', 'LTE', 'LCN', 'LAC', 'TLA',
+                 'LDC', 'LMY', 'LIC', 'LMC', 'MEA', 'TMN', 'MNA', 'MIC', 'NAC', 'INX', 'OED', 'OSS', 'PSS',
+                 'PST', 'PRE', 'SST', 'SAS', 'TSA', 'SSF', 'TSS', 'SSA', 'UMC', 'WLD']
 
-# Aplicamos UNION (sin ALL) para eliminar tuplas duplicadas ya que existen varias sedes distintas en un pais.
-regiones = sql^"""
-                SELECT *
-                FROM regiones,
-                UNION
-                SELECT sdo.pais_iso_3,
-                        sdo.region_geografica
-                FROM sedeDatosOriginal AS sdo
-                """
+paisLimpia.drop(paisLimpia[paisLimpia['idPais'].apply(lambda x: x in no_son_paises)].index, inplace = True)
 
-### en seccionesOriginal hay 3 duplicados, por eso mismo UNION (SIN ALL)
-secciones = sql^"""
-                SELECT *
-                FROM secciones
-                UNION
-                SELECT sco.sede_id, 
-                        sco.sede_desc_castellano
-                FROM seccionesOriginal AS sco
-                """
 
-pbi = sql^"""
-            SELECT *
-            FROM pbi
-            UNION ALL
-            SELECT pbo."Country Code", 
-                    pbo."2022" 
-            FROM pbisOriginal AS pbo
-            """
- 
-#%% # # # # # # # # # # 
-# # # Ejercicio H # # # 
-# # # # # # # # # # # #
+# Eliminamos de paises también aquellos paises sin Pbi, es decir, con valor Null.
+paisLimpia.dropna(subset = ['Pbi'], inplace = True)
 
-# i)
+# Convertimos los datos limpios en archivos csv, dejo un ejemplo. Insertar la ruta donde desean tener las tablas limpias.
+TablasLimpias = '~/Dropbox/UBA/2024/LaboDeDatos/TP1/Archivos/TablasLimpias/'
 
-#obtenemos pbi con nombre de cada pais
-consultaSQL = """
-                SELECT DISTINCT  a.idPais, a.Nombre as Pais,p.PBI_2022
-                from pbi as p, pais as a
-                where p.idPais=a.idPais 
-                ORDER BY a.idPais asc
-               """
-tabla1= sql^ consultaSQL               
+sedeLimpia.to_csv(TablasLimpias + 'sede.csv', index = False)
+paisLimpia.to_csv(TablasLimpias + 'pais.csv', index = False)
+redesLimpia.to_csv(TablasLimpias + 'redes.csv', index = False)
+regionesLimpia.to_csv(TablasLimpias + 'regiones.csv', index = False)
+seccionesLimpia.to_csv(TablasLimpias + 'secciones.csv', index = False)
 
-#cantidad de sedes por pais
-consultaSQL=""" 
-                SELECT  idPais ,COUNT(*) as Sedes
+# Importamos las carpetas limpias.
+
+sede = pd.read_csv( TablasLimpias + 'sede.csv')
+pais = pd.read_csv( TablasLimpias + 'pais.csv')
+redes = pd.read_csv( TablasLimpias + 'redes.csv')
+regiones = pd.read_csv( TablasLimpias + 'regiones.csv')
+secciones = pd.read_csv( TablasLimpias + 'secciones.csv')
+
+
+#%% Analisis de Datos - Ejercicio H
+
+# i)            
+
+# Cantidad de sedes por pais
+consultaSQL = """ 
+                SELECT  idPais , COUNT(*) as Sedes
                 FROM sede
                 GROUP BY idPais
+                ORDER BY Sedes DESC            
+              """
+
+sedes_por_pais = sql^ consultaSQL
+
+
+# Unimos pais, sedes y pbi. Estoy perdiendo ~5 paises, deduzco que el motivo es que
+# al borrar los pbi que figuraban como Null estos desaparecieron.
+consultaSQL = """
+                SELECT DISTINCT p.idPais, Nombre, Sedes, Pbi
+                FROM pais AS p
+                INNER JOIN sedes_por_pais AS sp
+                ON p.idPais = sp.idPais
                 ORDER BY Sedes DESC
-                
-            """
-
-tabla2= sql^ consultaSQL
-
-
-#unimos pais,sedes y pbi
-consultaSQL="""
-                SELECT DISTINCT Pais,Sedes,PBI_2022
-                FROM tabla1 as t1
-                INNER JOIN tabla2 as t2
-                ON t1.idPais=t2.idPais
-                ORDER BY Sedes desc
-
-            """
-tabla3= sql^ consultaSQL                
-
-#Promedio secciones.
+              """
+              
+sedes_pbi = sql^ consultaSQL                
 
 #Cantidad de secciones por sede
-consultaSQL= """
-                SELECT idSede,COUNT(*) as cantidadDescripcion
-                FROM secciones as sc
+consultaSQL = """
+                SELECT idSede, COUNT(*) AS cantidad_secciones
+                FROM secciones AS sc
                 GROUP BY idSede
-                
-             """
-cantSec=sql^ consultaSQL
+              """
+              
+cant_seccciones = sql^ consultaSQL
 
-#juntamos cantSet y sede
-
+# Calculamos el promedio de secciones por país
 consultaSQL=""" 
-               SELECT DISTINCT *
-               FROM sede as s
-               INNER JOIN cantSec as c
-               ON s.idSede=c.idSede
+               SELECT DISTINCT idPais, AVG(cantidad_secciones) AS Promedio
+               FROM cant_seccciones AS c
+               INNER JOIN sede AS s 
+               ON c.idSede = s.idSede
+               GROUP BY idPais
+               ORDER BY idPais ASC
            """
-unionTablas=sql^ consultaSQL
+           
+promedio_secciones =sql^ consultaSQL
 
-#obtenemos el promedio de secciones por pais
-consultaSQL="""
-                SELECT  idPais ,AVG(cantidadDescripcion) as promedio
-                FROM unionTablas
-                GROUP BY idPais 
-                ORDER BY idPais asc
-               
-            """
-promedioSec=sql^ consultaSQL
-
-#obtenemos nombre de paises y el promedio correspondiente
-
-consultaSQL="""
-               SELECT Nombre,Promedio
-               FROM promedioSec as p
-               INNER JOIN pais as pa
-               ON p.idPais=pa.idPais
-
-            """
-tablaPromPais=sql^ consultaSQL
-
-#Finalmente unimos los datos de la tabla 3 con la de promedioSec
-consultaSQL=""" 
-                SELECT Pais,Sedes,Promedio,PBI_2022
-                FROM tablaPromPais as t
-                INNER JOIN tabla3 as t3
-                ON t3.Pais=t.Nombre
-  
+# Juntamos los datos
+consultaSQL = """ 
+                SELECT Nombre, Sedes, p.Promedio, Pbi
+                FROM promedio_secciones AS p
+                INNER JOIN sedes_pbi AS s
+                ON s.idPais = p.idPais
             """
             
-respuesta1=sql^ consultaSQL
+result = sql^ consultaSQL
 
 # ii)
 
