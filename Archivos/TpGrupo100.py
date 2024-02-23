@@ -302,11 +302,11 @@ ax.set_ylim(0, 30)
 
 ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"));
 
-# 
-
 # ii)
-# Para cada pais donde existe almenos una sede agregamos la informacion sobre su region.
-# Descartamos los paises que tienen PBI=Null 
+
+# Para cada pais donde existe al menos una sede agregamos la informacion sobre su region.
+# Descartamos los paises que su PBI es Null
+
 consultaSQL = """
                 SELECT r.*, p.Pbi
                 FROM regiones AS r, pais AS p
@@ -338,7 +338,7 @@ ax = sns.boxplot( y = "Region",
 ax.set_title('PBI per cápita 2022 por Region donde Argentina tiene sede')
 ax.set_xlabel('PBI per cápita 2022 (USD)')
 ax.set_ylabel('Region')
-# ax.set_xlim(0,paises_regiones_pbi["Pbi"].max() + 2000)
+ax.set_xlim(0 ,paises_regiones_pbi["Pbi"].max() + 2000)
     
 
 
