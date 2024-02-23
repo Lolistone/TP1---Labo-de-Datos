@@ -350,6 +350,30 @@ ax.set_xlabel('PBI per cápita 2022 (USD)', fontsize=10)
 ax.set_ylabel('Region',fontsize=12)
 ax.set_xlim(-1 ,paises_regiones_pbi["Pbi"].max() + 2000)
 
+#grafico de las ultimas dos regiones 
+
+ultimosDos= medianas_regiones.tail(2)
+
+consultaSQL=""" 
+               SELECT *
+               FROM ultimosDos as u, paises_regiones_pbi as p
+               WHERE u.Region=p.Region  
+            """
+soloDos=sql^ consultaSQL
+
+ax = sns.boxplot( y = "Region", 
+                  x ="Pbi", 
+                  data = soloDos, 
+                  
+                  width = 0.6,  
+                  )
+
+ax.set_title('PBI per cápita 2022 por Region donde Argentina tiene sede',fontsize=18,fontweight='bold',pad=50)
+ax.set_xlabel('PBI per cápita 2022 (USD)',fontsize=12)
+ax.set_ylabel('Region',fontsize=12)
+
+ax.set.xlim(0,7000)
+
 
 # iii - Comparación entre Cantidad de sedes y Pbi.
 fig, ax = plt.subplots()
