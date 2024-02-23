@@ -274,6 +274,12 @@ consultaSQL = """
 
 pais_sede_red = sql^ consultaSQL
 
+# Convierto en .csv las consultas y las agregamos al anexo.
+Anexo = '~/Dropbox/UBA/2024/LaboDeDatos/TP1/Archivos/Anexo/'
+
+result.to_csv(Anexo + 'pais_secciones.csv')
+redes_por_pais.to_csv(Anexo + 'redes_por_pais.csv')
+pais_sede_red.to_csv(Anexo + 'pais_sede_red.csv')
 
 #%% Gráficos
 
