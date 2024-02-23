@@ -305,7 +305,7 @@ ax.bar(data = cantidad_sedes_region,
        width = 0.9,
        color = 'slateblue')
 
-ax.set_title('Cantidad de Sedes por Región',fontsize=18,fontweight='bold',pad=50)
+ax.set_title('Cantidad de Sedes por Región', fontsize=16, fontweight='bold', pad= 22)
 ax.set_xlabel('Región', fontsize = 12)                       
 ax.set_ylabel('Sedes', fontsize= 12)
 plt.xticks(rotation=90)
@@ -337,6 +337,9 @@ medianas_regiones = sql^consultaSQL
 ordenCorrecto = list(medianas_regiones['Region'])
 
 #Grafico de todas las regiones
+
+sns.set_style('whitegrid')
+
 ax = sns.boxplot( y = "Region", 
                   x ="Pbi", 
                   data = paises_regiones_pbi, 
@@ -345,7 +348,7 @@ ax = sns.boxplot( y = "Region",
                   width = 0.6,                 
                   order=ordenCorrecto)
 
-ax.set_title('PBI per cápita 2022 por Region \n En paises con alguna Sede', fontsize=12, fontweight='bold')
+ax.set_title('PBI per cápita 2022 por Región', fontsize=12, fontweight='bold')
 ax.set_xlabel('PBI per cápita 2022 (USD)', fontsize=10)
 ax.set_ylabel('Region',fontsize=12)
 ax.set_xlim(-1 ,paises_regiones_pbi["Pbi"].max() + 2000)
@@ -361,15 +364,17 @@ consultaSQL="""
             """
 soloDos=sql^ consultaSQL
 
+sns.set_style('whitegrid')
+
 ax = sns.boxplot( y = "Region", 
                   x ="Pbi", 
                   data = soloDos, 
-                  order=ordenCorrecto
+                  order=ordenCorrecto,
                   width = 0.6,  
                   )
 
-ax.set_title('PBI per cápita 2022 por Region donde Argentina tiene sede',fontsize=18,fontweight='bold',pad=50)
-ax.set_xlabel('PBI per cápita 2022 (USD)',fontsize=12)
+ax.set_title('PBI per cápita 2022 por Región',fontsize = 16, fontweight='bold', pad = 20)
+ax.set_xlabel('PBI per cápita 2022 (millones de USD)',fontsize=12)
 ax.set_ylabel('Region',fontsize=12)
 
 ax.set.xlim(0,7000)
@@ -377,6 +382,8 @@ ax.set.xlim(0,7000)
 
 # iii - Comparación entre Cantidad de sedes y Pbi.
 fig, ax = plt.subplots()
+
+sns.set_style('darkgrid')
 
 plt.rcParams['font.family'] = 'sans-serif'           
 
