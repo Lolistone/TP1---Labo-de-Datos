@@ -15,6 +15,8 @@
 \usepackage{graphicx} 
 \usepackage{indentfirst}
 \setlength{\parindent}{12pt}
+\usepackage{amsmath}
+
 
 %\usetikzlibrary{positioning}
 
@@ -75,38 +77,63 @@ Finalmente, con los datos ya limpios, a traves de distintas librerias como Panda
 
 \section{Procesamiento de Datos} \vspace{0.2cm}
 
-Antes de comenzar con el procesamiento de datos, nos encontramos con las fuentes de datos originales en distintas formas normales. Comenzando con lista-sedes-datos y lista-secciones tenemos que ninguna de ambas se encuentra en primera forma normal puesto que el atributo redes-sociales de la primera y, el atributo telefonos\_principales de la segunda tenian valores no atómicos. Al no estar, en 1FN 
-tampoco se encontraran en 2FN. \par
-Por otro lado, la tabla que contiene el pbi de los paises, está en primera y segunda forma normal, sin embargo no se encuentra en tercera forma normal puesto que tiene dependencias transitivas, en particular, de Indicator Code $\rightarrow$ Indicator Name. \par
-Y, por último, la tabla con la lista de sedes básica (la cual no utilizamos), está en segunda forma normal, pero no está en tercera forma normal puesto que tiene dependencias transitivas como por ejemplo, pais\_iso\_3 $\rightarrow$ pais\_iso\_2, considerenado clave primaria
-a sede\_id.
+Antes de comenzar con el procesamiento de datos, nos encontramos con las fuentes de datos originales en distintas formas normales. Comenzando con \textbf{lista-sedes-datos} y \textbf{lista-secciones}, tenemos que ninguna de ambas se encuentra en primera forma normal puesto que el atributo \textit{redes-sociales} de la primera y, el atributo \textit{telefonos\_principales} de la segunda tienen valores no atómicos. Al no estar en 1FN, tampoco se encontraran en 2FN. \par
+Por otro lado, la tabla que contiene el pbi de los paises, está en primera y segunda forma normal, sin embargo no se encuentra en tercera forma normal puesto que tiene dependencias transitivas, en particular, la DF \{Country Code $\rightarrow$ Indicator Name\} es transitiva mediante el atributo \textit{Indicator Code}, el cual no es clave candidata pero forma parte de la DF \{Indicator Code $\rightarrow$ Indicator Name\}, ademas tomamos \textit{Country Code} como unica clave.  \par
+Y, por último, la tabla \textbf{lista-sedes} está en segunda forma normal, pero no está en tercera forma normal puesto que tiene dependencias transitivas como por ejemplo, la DF \{sede\_id $\rightarrow$ pais\_iso\_2\} es transitiva mediante el atributo \textit{pais\_iso\_3}. Esto es asi por que consideramos \textit{sede\_id} como clave primaria
 
 \subsection{Limpieza de Datos}
 
 Buscando mejorar la calidad de datos, encontramos problemas de instancia, por ejemplo, datos inconsistentes, problemas de 
-procesos, puesto que hay diferentes criterios en la carga de los datos. Ahora, veamos cada dataset en detalle,
+proceso, puesto que hay diferentes criterios en la carga de los datos. Ahora, veamos cada dataset en detalle,
 
 \begin{enumerate}
-	\item lista-sede-datos, en ella, encontramos un problema asociado a instancia en el atributo 'redes\_sociales' que influye en su consistencia puesto que no hay un criterio unificado a la hora de cargar redes sociales. Por ejemplo, tenemos datos cargados en forma de URL donde es facil identificar a que red social pertenece, y por otro lado, tenemos datos que contienen, intuimos, nombres de usuarios, pero
-no podemos discernir su red social. Para tener una medida concreta acerca de la magnitud del problema utilizamos el método GQM de la siguiente manera:
+	\item lista-sede-datos, en ella, encontramos un problema asociado a instancia en el atributo \textit{'redes\_sociales'} que influye en su consistencia puesto que no encontramos un criterio unificado a la hora de cargar distintas redes sociales. Por ejemplo, tenemos datos cargados en forma de URL donde es facil identificar a que red social pertenece, y por otro lado, tenemos datos que contienen, intuimos, nombres de usuarios, pero no podemos discernir su red social. Para tener una medida concreta acerca de la magnitud del problema utilizamos el método GQM de la siguiente manera:
 \begin{itemize}
 	\item Goal : Evitar que haya datos que no se puedan identificar con alguna red social.
 	\item Question : ¿Cual es la cantidad de elementos en redes\_sociales que no podemos identificar?
-	\item Metrica :  Proporcion de registros sin campo redes\_sociales que son Urls o comienzan con @.  (0.23)
+	\item Metrica :  Proporción de registros sin campo redes\_sociales que son Urls o comienzan con @.
+        
+        \begin{center}          
+        M1: $ \frac{\text{Cantidad de registros con datos en redes\_sociales que no son Urls o comienzan con @} }{\text{Cantidad de registros totales}} $
+        \end{center}
+    %(0.23)
+    
 \end{itemize}
-Para corregir esta tabla, además, seleccionamos columnas que consideramos relevantes para la resolución de nuestro problema principal. Puesto que teniamos datos redundantes, como dos codigos para un mismo pais o su traducción al inglés. También, consideramos mantener unicamente los datos de redes sociales que eran consistentes, es decir, eran Urls o comenzaban con @.
-	\item En tabla correspondiente al PBI, API\_NY.GDP.PCAP.CD\_DS2\_en\_csv\_v2\_73.csv, tenemos también un problema de instancia, que afecta en particular, la completitud del atributo '2022'. Asi como también, otro problema de instancia es que encontramos muchos datos que no corresponden a paises. Estos fueron limpiados antes de elaborar la siguiente métrica,
+Para corregir esta tabla, además, seleccionamos columnas que consideramos relevantes para la resolución de nuestro problema principal. Puesto que encontramos datos redundantes, como dos nomenclaturas de codigo (pais\_iso\_3 / pais\_iso\_2) para un mismo pais, o la traducción al inglés de los nombres de estos paises. También, consideramos mantener unicamente los datos de redes sociales que eran consistentes, es decir, que eran Urls o comenzaban con @.
+
+Una vez hecha la limpieza de datos, procedemos a comparar las metricas antes y despues de dicha limpieza:
 \begin{itemize}
-	\item Goal : Tener el dato '2022' quie refiere al Pbi de cada país completo,.
-	\item Question : ¿Es relevante la proporcion de paises con el dato '2022' vacio?
-	\item Metric: Proporcion de paises con el campo '2022' vacio. (0.09)
+    \item Antes: $M1 =  0.23$, es decir que un $\% 23$ de registros son no deseados
+    \item Después: $M1 =  0$, es decir que un $\% 0$ de registros son no deseados
+\end{itemize}
+
+	\item En tabla correspondiente al PBI, API\_NY.GDP.PCAP.CD\_DS2\_en\_csv\_v2\_73.csv, tenemos también un problema de instancia, que afecta en particular, la completitud del atributo '2022'. Asi como también, otro problema de instancia es que encontramos muchos datos que no corresponden a paises. Estos fueron descartados antes de elaborar la siguiente métrica,
+\begin{itemize}
+	\item Goal : Tener el dato '2022' que refiere al Pbi de cada país completo.
+	\item Question : ¿Es relevante la proporción de paises con el dato '2022' vacío?
+	\item Metric: Proporción de paises con el campo '2022' vacío.
+        \begin{center}
+            M1: $\frac{\text{Cantidad de registros con dato vacio en el campo '2022'}}{\text{Cantidad de registros totales}}$
+        \end{center}
+  %(0.09)
 \end{itemize}
 Para corregir este dataset, en primeria instancia, descartamos todas las columnas que no aportaban a nuestro objetivo, como por ejemplo, 
 todas aquellas correspondientes a años anteriores a 2022. En segunda instancia, eliminamos aquellos datos que no correspondian con paises, 
-por ejemplo 'Africa'. En último lugar, consideramos que al ser tan baja la proporcion de nulls, era conveniente descartarlos. 
+por ejemplo 'Africa'. 
+
+Una vez hecha la limpieza de datos, procedemos a comparar las metricas antes y despues:
+
+\begin{itemize}
+    \item Antes: $M1 =  0.09$, es decir, un $\% 9$ de registros contienen NULL en el campo '2022'
+    \item Después: $M1 =  0$, es decir, un $\% 0$ de registros son no deseados
+\end{itemize}
+
+En último lugar, consideramos que al ser tan baja la proporcion de nulls, era conveniente descartarlos. 
+
 	\item Por último, en lista-secciones, nos quedamos unicamente con las dos primeras columnas, sede\_id y descripción, en las cuales no encontramos ningun problema de calidad.
 \end{enumerate}
 
+\newpage
 \subsection{Diagrama de Entidad Relacional} \vspace{0.2cm}
 
 Una vez planteado nuestro objetivo, nos encargamos de ver que datos necesitabamos para alcanzarlo, y como estarian representados. Para esto, elaboramos el siguien diagrama de entidad
@@ -114,7 +141,7 @@ relacional.  \vspace{0.2cm}
 
 \begin{figure}[ht]
 	\centering
-	\includegraphics[width=1\textwidth]{DerFinal.png}
+	\includegraphics[width=1\textwidth]{DiagramaFinal.png}
 	\caption{Diagrama de Entidad Relacional}
 	\label{fig:ejemplo}
 \end{figure} \vspace{0.1cm}
