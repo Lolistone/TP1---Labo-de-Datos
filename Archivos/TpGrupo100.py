@@ -171,19 +171,32 @@ result = sql^ consultaSQL
 
 # ii)
 
-# Agrego las regiones a la tabla que ya tenia con los paises, su cantidad de sedes (estan aquellos con al menos una) y su pbi.
+# Descarto paises sin sedes
+consultaSQL = """
+                SELECT DISTINCT *
+                FROM sedes_pbi 
+                WHERE Sedes > 0
+              """
+
+paises_con_sede = sql^ consultaSQL
+
+
+# Uno las regiones a la tabla anterio y calculo el promedio.
 consultaSQL = """
                 SELECT DISTINCT r.region, COUNT(*) AS Sedes, AVG(p.Pbi) Pbi_Promedio
-                FROM sedes_pbi AS p
+                FROM paises_con_sede AS p
                 INNER JOIN regiones AS r
                 ON r.idPais = p.idPais
                 GROUP BY region
-                ORDER BY Sedes DESC
+                ORDER BY Pbi_Promedio DESC
               """
 
 region_pais_pbi = sql^ consultaSQL
 
 # iii)
+
+# Cómo pide las vias de comunicacion de las sedes de cada pais, nos quedamos solo con aquellos paises que
+# efectivamente tienen sedes.
 
 # Recuperamos paises sin redes sociales, y de paso pegamos la URL al nombre del Pais
 consultaSQL = """
@@ -218,9 +231,7 @@ redes_tipos = sql^ consultaSQL
 # Solo resta contar, decidimos que los paies categorizados 'SinRedSocial' tengan 0 tipos redes.
 consultaSQL = """
                 SELECT idPais,
-                       CASE WHEN (tipo_red != 'SinRedSocial') THEN 1 
-                             ELSE 0 
-                       END AS cantidad
+                       CASE WHEN (tipo_red != 'SinRedSocial') THEN 1 ELSE 0 END AS cantidad
                 FROM redes_tipos
                 GROUP BY idPais, tipo_red
               """
@@ -228,6 +239,10 @@ consultaSQL = """
 cantidad_redes = sql^ consultaSQL
 
 # Antes agrupe pais - tipo de red, y si esta era válida agregaba un 1, sino un 0. Resta entonces sumar.
+
+# Aclaración: Faltan 5 paises puesto que al tomar la decisión de descartar aquellos paises sin PBI, 
+# también desapareción su nombre. Una posible solución es no realizar este Join y manejarnos con el Id.
+
 consultaSQL = """
                 SELECT p.Nombre,
                        SUM(r.cantidad) AS "Cantidad de tipos de red social"
