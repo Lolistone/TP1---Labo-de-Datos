@@ -280,14 +280,16 @@ pais_sede_red = sql^ consultaSQL
 # Cantidad de Sedes por Region
 
 consultaSQL=""" 
-                SELECT DISTINCT r.Region,s.idSede
+                SELECT DISTINCT r.Region, COUNT(*) AS Sedes
                 FROM regiones as r
                 INNER JOIN sede as s
                 ON r.idPais=s.idPais
-                ORDER BY Region ASC
+                GROUP BY REGION
+                ORDER BY Sedes ASC
             
             """
 cantidad_sedes_region= sql^ consultaSQL
+
 fig, ax = plt.subplots()
 
 plt.rcParams['font.family'] = 'sans-serif'
