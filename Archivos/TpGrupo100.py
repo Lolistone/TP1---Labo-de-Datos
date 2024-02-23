@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from   matplotlib import ticker   # Para agregar separador de miles 
 import six
 from inline_sql import sql, sql_val
+import seaborn as sns
 
 
 carpeta = "~/Dropbox/UBA/2024/LaboDeDatos/TP1/Archivos/TablasOriginales/" 
@@ -88,6 +89,7 @@ regionesLimpia = regionesLimpia.drop_duplicates()
 
 # Convertimos los datos limpios en archivos csv, dejo un ejemplo. Insertar la ruta donde desean tener las tablas limpias.
 TablasLimpias = '~/Dropbox/UBA/2024/LaboDeDatos/TP1/Archivos/TablasLimpias/'
+
 
 
 sedeLimpia.to_csv(TablasLimpias + 'sede.csv', index = False)
@@ -301,6 +303,43 @@ ax.set_ylim(0, 30)
 ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"));
 
 # 
+
+# ii)
+# Para cada pais donde existe almenos una sede agregamos la informacion sobre su region.
+# Descartamos los paises que tienen PBI=Null 
+consultaSQL = """
+                SELECT r.*, p.Pbi
+                FROM regiones AS r, pais AS p
+                WHERE r.idPais = p.idPais
+              """
+paises_regiones_pbi = sql^consultaSQL
+
+# Calculo mediana de PBIs para cada region, y ordenamos
+consultaSQL = """
+                SELECT pr.Region, MEDIAN(Pbi) AS Mediana
+                FROM paises_regiones_pbi AS pr
+                GROUP BY pr.Region
+                ORDER BY Mediana DESC
+              """  
+medianas_regiones = sql^consultaSQL
+
+ordenCorrecto = list(medianas_regiones['Region'])
+
+
+ax = sns.boxplot( y = "Region", 
+                  x ="Pbi", 
+                  data = paises_regiones_pbi, 
+                  palette = 'Set2',
+                  legend = True,
+                  width = 0.6,                 
+                  order=ordenCorrecto,                  
+                  )
+
+ax.set_title('PBI per cápita 2022 por Region donde Argentina tiene sede')
+ax.set_xlabel('PBI per cápita 2022 (USD)')
+ax.set_ylabel('Region')
+# ax.set_xlim(0,paises_regiones_pbi["Pbi"].max() + 2000)
+    
 
 
 #%% Funcion Auxiliar para graficar las tablas
