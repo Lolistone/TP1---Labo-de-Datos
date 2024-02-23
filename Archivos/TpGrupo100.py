@@ -292,7 +292,7 @@ consultaSQL="""
                 INNER JOIN sede as s
                 ON r.idPais=s.idPais
                 GROUP BY REGION
-                ORDER BY Sedes ASC
+                ORDER BY Sedes DESC
             
             """
 cantidad_sedes_region= sql^ consultaSQL
