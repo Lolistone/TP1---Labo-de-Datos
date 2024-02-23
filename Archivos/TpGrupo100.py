@@ -314,6 +314,11 @@ ax.set_ylim(0, 50)
 
 ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"));
 
+# Guarda el gráfico como png y aumenta la densidad de pixeles.
+plt.rcParams['figure.figsize'] = [8, 8]
+plt.rcParams['figure.autolayout'] = True
+
+plt.savefig('bar_region.png', dpi = 1200)
 
 # ii - Para cada pais donde existe al menos una sede agregamos la informacion sobre su region.
 # Descartamos los paises que su PBI es Null
@@ -348,10 +353,15 @@ ax = sns.boxplot( y = "Region",
                   width = 0.6,                 
                   order=ordenCorrecto)
 
-ax.set_title('PBI per cápita 2022 por Región', fontsize=12, fontweight='bold')
-ax.set_xlabel('PBI per cápita 2022 (USD)', fontsize=10)
-ax.set_ylabel('Region',fontsize=12)
-ax.set_xlim(-1 ,paises_regiones_pbi["Pbi"].max() + 2000)
+ax.set_title('PBI per cápita 2022 por Región', fontsize=12, fontweight='bold', pad = 10)
+ax.set_xlabel('PBI per cápita 2022 (USD)', fontsize=10, labelpad = 10)
+ax.set_ylabel('Región',fontsize=12)
+ax.set_xlim(-1 , paises_regiones_pbi["Pbi"].max() + 20000)
+
+plt.rcParams['figure.figsize'] = [8, 3]
+plt.rcParams['figure.autolayout'] = True
+
+plt.savefig('boxplot_regiones.png', dpi = 1200)
 
 #Grafico de las ultimas dos regiones 
 ordenCorrecto = list(medianas_regiones['Region'])[-2:]
@@ -375,24 +385,31 @@ ax = sns.boxplot( y = "Region",
                   )
 
 ax.set_title('PBI per cápita 2022 por Región',fontsize = 16, fontweight='bold', pad = 20)
-ax.set_xlabel('PBI per cápita 2022 (millones de USD)',fontsize=12)
-ax.set_ylabel('Region',fontsize=12)
+ax.set_xlabel('PBI per cápita 2022 (en millones de USD)', fontsize=12, labelpad = 10)
+ax.set_ylabel('Región', fontsize=12)
 
-ax.set.xlim(0,7000)
 
+plt.rcParams['figure.figsize'] = [8, 3]
+plt.rcParams['figure.autolayout'] = True
+
+plt.savefig('boxplot_ultimas.png', dpi = 1200)
 
 # iii - Comparación entre Cantidad de sedes y Pbi.
 sns.set_style('darkgrid')          
 
 fig, ax = plt.subplots()
 
-sns.scatterplot(x = sedes_pbi.Sedes, y = sedes_pbi.Pbi, s = 20)
+sns.scatterplot(x = sedes_pbi.Sedes, y = sedes_pbi.Pbi, s = 25)
 
 plt.title('Cantidad de Sedes vs PBI per capita')
-ax.set_xlabel('Sedes')
-ax.set_ylabel('PBI (millones de USD)')
+ax.set_xlabel('Sedes', labelpad = 10)
+ax.set_ylabel('PBI (millones de USD)', labelpad = 10)
 
 
+plt.rcParams['figure.figsize'] = [7.50, 5.50]
+plt.rcParams['figure.autolayout'] = True
+
+plt.savefig('plot_pbi.png', dpi = 1200)
 
 #%% Funcion Auxiliar para graficar las tablas
 
