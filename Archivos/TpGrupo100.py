@@ -277,7 +277,7 @@ pais_sede_red = sql^ consultaSQL
 
 #%% Gráficos
 
-# Cantidad de Sedes por Region
+# i - Cantidad de Sedes por Region
 
 consultaSQL=""" 
                 SELECT DISTINCT r.Region, COUNT(*) AS Sedes
@@ -310,13 +310,12 @@ ax.set_xlabel('Región', fontsize = 12)
 ax.set_ylabel('Sedes', fontsize= 12)
 plt.xticks(rotation=90)
 ax.bar_label(ax.containers[0], fontsize=8)
-ax.set_ylim(0, 30)                         
+ax.set_ylim(0, 50)                         
 
 ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"));
 
-# ii)
 
-# Para cada pais donde existe al menos una sede agregamos la informacion sobre su region.
+# ii - Para cada pais donde existe al menos una sede agregamos la informacion sobre su region.
 # Descartamos los paises que su PBI es Null
 
 consultaSQL = """
@@ -351,10 +350,23 @@ ax.set_title('PBI per cápita 2022 por Region donde Argentina tiene sede')
 ax.set_xlabel('PBI per cápita 2022 (USD)')
 ax.set_ylabel('Region')
 ax.set_xlim(0 ,paises_regiones_pbi["Pbi"].max() + 2000)
-    
+
+# iii - Comparación entre Cantidad de sedes y Pbi.
+fig, ax = plt.subplots()
+
+plt.rcParams['font.family'] = 'sans-serif'           
+
+ax.plot('Sedes', 'Pbi', data = sedes_pbi, marker='.', markersize = 4, linewidth = 0, color = 'crimson')
+
+ax.set_title('Cantidad de Sedes vs PBI per capita')
+ax.set_xlabel('Sedes')
+ax.set_ylabel('PBI (millones de USD)')
+ax.set_xlim(-1,12)
+ax.set_ylim(0,120000)
 
 
 #%% Funcion Auxiliar para graficar las tablas
+
 def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=14,
                      header_color='#40466e', row_colors=['#f1f1f2', 'w'], edge_color='w',
                      bbox=[0, 0, 1, 1], header_columns=0,
