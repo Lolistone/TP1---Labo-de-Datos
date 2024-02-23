@@ -185,7 +185,7 @@ paises_con_sede = sql^ consultaSQL
 
 # Uno las regiones a la tabla anterio y calculo el promedio.
 consultaSQL = """
-                SELECT DISTINCT r.region AS "Region geografica", COUNT(*) AS "Paises Con Sedes Argentinas", AVG(p.Pbi) AS "Promedio PBI per Cápita 2022 (U$S)"
+                SELECT DISTINCT r.region AS "Region geografica", COUNT(*) AS "Paises Con Sedes Argentinas", ROUND(AVG(p.Pbi), 2) AS "Promedio PBI per Cápita 2022 (U$S)"
                 FROM paises_con_sede AS p
                 INNER JOIN regiones AS r
                 ON r.idPais = p.idPais
@@ -368,7 +368,8 @@ sns.set_style('whitegrid')
 
 ax = sns.boxplot( y = "Region", 
                   x ="Pbi", 
-                  data = soloDos, 
+                  data = soloDos,
+                  palette = ['orange', 'olivedrab'],
                   order=ordenCorrecto,
                   width = 0.6,  
                   )
@@ -381,19 +382,16 @@ ax.set.xlim(0,7000)
 
 
 # iii - Comparación entre Cantidad de sedes y Pbi.
+sns.set_style('darkgrid')          
+
 fig, ax = plt.subplots()
 
-sns.set_style('darkgrid')
+sns.scatterplot(x = sedes_pbi.Sedes, y = sedes_pbi.Pbi, s = 20)
 
-plt.rcParams['font.family'] = 'sans-serif'           
-
-ax.plot('Sedes', 'Pbi', data = sedes_pbi, marker='.', markersize = 4, linewidth = 0, color = 'crimson')
-
-ax.set_title('Cantidad de Sedes vs PBI per capita')
+plt.title('Cantidad de Sedes vs PBI per capita')
 ax.set_xlabel('Sedes')
 ax.set_ylabel('PBI (millones de USD)')
-ax.set_xlim(-1,12)
-ax.set_ylim(0,120000)
+
 
 
 #%% Funcion Auxiliar para graficar las tablas
@@ -421,4 +419,4 @@ def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=14,
             cell.set_facecolor(row_colors[k[0]%len(row_colors) ])
     return ax
 
-render_mpl_table(result, header_columns=0, col_width=4.0)
+render_mpl_table(region_pais_pbi, header_columns=0, col_width=6.2)
