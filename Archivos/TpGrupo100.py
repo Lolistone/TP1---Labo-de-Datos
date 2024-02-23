@@ -351,7 +351,7 @@ ax.set_ylabel('Region',fontsize=12)
 ax.set_xlim(-1 ,paises_regiones_pbi["Pbi"].max() + 2000)
 
 #Grafico de las ultimas dos regiones 
-
+ordenCorrecto = list(medianas_regiones['Region'])[-2:]
 ultimosDos= medianas_regiones.tail(2)
 
 consultaSQL=""" 
@@ -364,7 +364,7 @@ soloDos=sql^ consultaSQL
 ax = sns.boxplot( y = "Region", 
                   x ="Pbi", 
                   data = soloDos, 
-                  
+                  order=ordenCorrecto
                   width = 0.6,  
                   )
 
