@@ -305,7 +305,7 @@ ax.bar(data = cantidad_sedes_region,
        width = 0.9,
        color = 'slateblue')
 
-ax.set_title('Cantidad de Sedes por Región')
+ax.set_title('Cantidad de Sedes por Región',fontsize=18,fontweight='bold',pad=50)
 ax.set_xlabel('Región', fontsize = 12)                       
 ax.set_ylabel('Sedes', fontsize= 12)
 plt.xticks(rotation=90)
@@ -346,9 +346,9 @@ ax = sns.boxplot( y = "Region",
                   order=ordenCorrecto,                  
                   )
 
-ax.set_title('PBI per cápita 2022 por Region donde Argentina tiene sede')
-ax.set_xlabel('PBI per cápita 2022 (USD)')
-ax.set_ylabel('Region')
+ax.set_title('PBI per cápita 2022 por Region donde Argentina tiene sede',fontsize=18,fontweight='bold',pad=50)
+ax.set_xlabel('PBI per cápita 2022 (USD)',fontsize=12)
+ax.set_ylabel('Region',fontsize=12)
 ax.set_xlim(0 ,paises_regiones_pbi["Pbi"].max() + 2000)
 
 # iii - Comparación entre Cantidad de sedes y Pbi.
