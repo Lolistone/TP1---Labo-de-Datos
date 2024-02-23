@@ -161,8 +161,8 @@ promedio_secciones =sql^ consultaSQL
 consultaSQL = """ 
                 SELECT Nombre, 
                         Sedes,
-                        CASE WHEN p.Promedio is NULL THEN 0 ELSE ROUND(p.Promedio, 2) END AS Promedio, 
-                        ROUND(Pbi) AS Pbi
+                        CASE WHEN p.Promedio is NULL THEN 0 ELSE ROUND(p.Promedio, 2) END AS "Secciones Promedio ", 
+                        ROUND(Pbi) AS "PBI per Cápita 2022 (U$S)"
                 FROM promedio_secciones AS p
                 RIGHT OUTER JOIN sedes_pbi AS s
                 ON s.idPais = p.idPais
@@ -185,12 +185,12 @@ paises_con_sede = sql^ consultaSQL
 
 # Uno las regiones a la tabla anterio y calculo el promedio.
 consultaSQL = """
-                SELECT DISTINCT r.region, COUNT(*) AS Sedes, AVG(p.Pbi) Pbi_Promedio
+                SELECT DISTINCT r.region AS "Region geografica", COUNT(*) AS "Paises Con Sedes Argentinas", AVG(p.Pbi) AS "Promedio PBI per Cápita 2022 (U$S)"
                 FROM paises_con_sede AS p
                 INNER JOIN regiones AS r
                 ON r.idPais = p.idPais
                 GROUP BY region
-                ORDER BY Pbi_Promedio DESC
+                ORDER BY "Promedio PBI per Cápita 2022 (U$S)" DESC
               """
 
 region_pais_pbi = sql^ consultaSQL
@@ -336,7 +336,7 @@ medianas_regiones = sql^consultaSQL
 
 ordenCorrecto = list(medianas_regiones['Region'])
 
-
+#Grafico de todas las regiones
 ax = sns.boxplot( y = "Region", 
                   x ="Pbi", 
                   data = paises_regiones_pbi, 
@@ -350,7 +350,7 @@ ax.set_xlabel('PBI per cápita 2022 (USD)', fontsize=10)
 ax.set_ylabel('Region',fontsize=12)
 ax.set_xlim(-1 ,paises_regiones_pbi["Pbi"].max() + 2000)
 
-#grafico de las ultimas dos regiones 
+#Grafico de las ultimas dos regiones 
 
 ultimosDos= medianas_regiones.tail(2)
 
