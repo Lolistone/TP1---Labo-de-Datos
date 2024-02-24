@@ -281,6 +281,30 @@ result.to_csv(Anexo + 'pais_secciones.csv')
 redes_por_pais.to_csv(Anexo + 'redes_por_pais.csv')
 pais_sede_red.to_csv(Anexo + 'pais_sede_red.csv')
 
+#%% Consultas Auxiliares
+
+# Obtengo el promedio de Pbi según la cantidad de Paises
+consultaSQL = """ 
+                SELECT Sedes, 
+                       COUNT(*) AS Paises,
+                       AVG("PBI per Cápita 2022 (U$S)") AS Promedio
+                FROM result
+                GROUP BY Sedes
+            """
+            
+prom_por_sede = sql^ consultaSQL
+
+# Agarro solo a aquellos con una muestra de paises relevante
+consultaSQL = """ 
+                SELECT Sedes, 
+                       COUNT(*) AS Paises,
+                       ROUND(AVG("PBI per Cápita 2022 (U$S)")) AS "PBI Promedio"
+                FROM result
+                GROUP BY Sedes
+                HAVING Paises >= 10 
+            """
+            
+prom_por_sede_relevante = sql^ consultaSQL
 
 #%% Gráficos
 
@@ -363,7 +387,7 @@ ax.set_xlabel('PBI per cápita 2022 (USD)', fontsize=10, labelpad = 10)
 ax.set_ylabel('Región',fontsize=12)
 ax.set_xlim(-1 , paises_regiones_pbi["Pbi"].max() + 20000)
 
-plt.rcParams['figure.figsize'] = [8, 3]
+plt.rcParams['figure.figsize'] = [7.50, 3.50]
 plt.rcParams['figure.autolayout'] = True
 
 plt.savefig('boxplot_regiones.png', dpi = 1200)
@@ -411,10 +435,16 @@ ax.set_xlabel('Sedes', labelpad = 10)
 ax.set_ylabel('PBI (USD)', labelpad = 10)
 
 
+ax.set_ylim(0, 25000)  
+
 plt.rcParams['figure.figsize'] = [7.50, 5.50]
 plt.rcParams['figure.autolayout'] = True
 
 plt.savefig('plot_pbi.png', dpi = 1200)
+
+#%% Gráficos Auxiliares
+
+
 
 #%% Funcion Auxiliar para graficar las tablas
 
@@ -441,4 +471,4 @@ def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=14,
             cell.set_facecolor(row_colors[k[0]%len(row_colors) ])
     return ax
 
-render_mpl_table(region_pais_pbi, header_columns=0, col_width=6.2)
+render_mpl_table(prom_por_sede, header_columns=0, col_width=6.2)
