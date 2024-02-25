@@ -92,6 +92,7 @@ TablasLimpias = '~/Dropbox/UBA/2024/LaboDeDatos/TP1/Archivos/TablasLimpias/'
 
 
 
+
 sedeLimpia.to_csv(TablasLimpias + 'sede.csv', index = False)
 paisLimpia.to_csv(TablasLimpias + 'pais.csv', index = False)
 redesLimpia.to_csv(TablasLimpias + 'redes.csv', index = False)
@@ -396,10 +397,12 @@ ax.set_xlabel('PBI per cápita 2022 (USD)', fontsize=10, labelpad = 10)
 ax.set_ylabel('Región',fontsize=12)
 ax.set_xlim(-1 , paises_regiones_pbi["Pbi"].max() + 20000)
 
+ax.xaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"));
+
 plt.rcParams['figure.figsize'] = [7.50, 3.50]
 plt.rcParams['figure.autolayout'] = True
 
-plt.savefig('boxplot_regiones.png', dpi = 1200)
+plt.savefig('boxplot_regiones.png', dpi = 700)
 
 #Grafico de las ultimas dos regiones 
 ordenCorrecto = list(medianas_regiones['Region'])[-2:]
@@ -426,11 +429,12 @@ ax.set_title('PBI per cápita 2022 por Región',fontsize = 16, fontweight='bold'
 ax.set_xlabel('PBI per cápita 2022 (USD)', fontsize=12, labelpad = 10)
 ax.set_ylabel('Región', fontsize=12)
 
+ax.xaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"));
 
 plt.rcParams['figure.figsize'] = [8, 3]
 plt.rcParams['figure.autolayout'] = True
 
-plt.savefig('boxplot_ultimas.png', dpi = 1200)
+plt.savefig('boxplot_ultimas.png', dpi = 700)
 
 # iii - Comparación entre Cantidad de sedes y Pbi.
 sns.set_style('darkgrid')          
