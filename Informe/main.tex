@@ -49,16 +49,15 @@
 
 \section{Resumen} \vspace{0.3cm}
 
-En el presente trabajo se enfocó en encontrar  una relación entre el PBI(Producto bruto interno) per cápita de cada país , específicamente del año 2022, y la cantidad de sedes en el exterior que tiene Argentina en dichos países.
-Para ello se llevaron a cabo diversas actividades, entre las cuales destaca la realización de un  DER(Diagrama-entidad-relación), la limpieza de datos  y  la generación de gráficos y tablas utilizando Python para visualizar y analizar los datos de manera efectiva. A lo largo de todo el  trabajo, fue necesario tomar decisiones para mejorar la calidad de datos, mantener la integridad y cumplir con los requisitos de normalización establecidos en el informe. 
-Al finalizar todas las actividades, no se pudo llegar a  una conclusión definitiva. Por consecuente, se elaboraron gráficos adicionales los cuales  nos permitió una mejor visión a nuestra problemática. Finalmente  se  concluyó que  aquellos países que poseían alguna sede Argentina, en promedio, tenían  un PBI mayor en comparación a los que no. 
-
+El presente trabajo se enfocó en encontrar  una relación entre el PBI per cápita de cada país , específicamente del año 2022, y la cantidad de sedes en el exterior que tiene Argentina en dichos países.
+Para ello se llevaron a cabo diversas actividades, comenzado con  la  elaboración de un Diagrama de entidad relacional para un posterior paso al modelo relacional, con el fin de dejar en claro el esquema con el cual ibamos a trabajar. Luego, con el equema planteado realizamos una limpieza de los datos con el fin de mejorar la calidad de los mismos. Para esto, hicimos un fuerte uso de Pandas. Por último, realizamos una seire de consultas y gráficos en Pyhton con el fin de elaborar una conclusión. \par
+Cómo no nos parecian suficientes los gráficos y consultas que requerian las consignas, consideramos oportuno realizar ciertas consultas y/o gráficos extra para elaborar una conclusión definitiva, los paises con presencia Argentina, muestran una tendencia a tener una mayor PBI per cápita. 
 
 \section{Introducción} \vspace{0.1cm}
 
 \subsection{Objetivo y Fuente} \vspace{0.3cm}
 
-El objetivo principal de este trabajo es encontrar una relación entre la cantidad de sedes de Argentina en un país y su PBI, si este será mayor, menor o si influirá la cantidad de secciones que una sede posea.  Para esto, trabajaremos con los siguientes datos, 
+El objetivo principal de este trabajo es encontrar una relación entre la presencia de sedes de Argentina en un país y su PBI per cápita, si este será mayor, menor o si influirá la cantidad de sedes que este posea.  Para esto, trabajaremos con los siguientes datos, 
 
 \begin{itemize}
 	\item PBI per cápita de los paises (1)
@@ -156,7 +155,7 @@ Como se puede ver en la imagen anterior, consideramos que,
 	\item Un País puede tener muchas o ninguna sede.
 	\item Las secciones existen pues existen las sedes, entonces, lo consideramos una entidad debil.
 	\item Una sección puede estar en una o muchas Sedes, por ejemplo, la Embajada en Brasil y en Chile tiene su sección Administración.
-	\item Una sede tiene al menos una sección.
+	\item Una sede puede tener varias o ninguna sección.
 	\item Cuando hablamos de Redes, hablamos mas de un perfil en una red social, por lo tanto, una red puede pertenecer a una y solo una sede.
 \end{itemize}
 
@@ -388,16 +387,27 @@ Observación: la única DF es $\{$IdSede, Sección$\} \rightarrow \{$IdSede, Sec
 \subsection{Importación de Datos} \vspace{0.3cm}
 
 Una vez ya limpios los datos, creamos con pandas un archivo csv para cada relación de nuestro modelo. Luego, los importamos 
-a los dataframe vacíos creados anteriormente.
+a los dataframe vacíos creados anteriormente. Estos se encontrarán en la carpeta, 'TablasLimpias'.
 
-\section{Decisiones tomadas}
+\newpage
 
-En los distintos procedimientos que llevamos acabo explicados en la sección anterior, encontramos necesario realizar tomas de decisiones para mejorar, mantener la calidad de datos y cumplir la normalización pedida en el informe. Esto debido a que encontramos atributos irrelevantes, que presentaban información confusa o datos ya presentados en otros atributos. Estas decisiones fueron las siguientes:
+\section{Decisiones tomadas} 
+
+En los distintos procedimientos que llevamos acabo explicados en la sección anterior, encontramos necesario realizar tomas de decisiones para mejorar la calidad de datos, puesto que encontramos datos irrelevantes, redundantes y en algunos casos inconsistentes. Las decisiones tomadas se detallan a continuación,
+
 \begin{itemize}
-    \item En la lista-sede-datos encontramos muchos registros con datos correspondientes al atributo "redes\_sociales" que no contaban con una forma consistente a la hora de cargarse. Por lo que, como fue explicado en la sección \textbf{3.1 Limpieza de datos}, mantuvimos los datos que efectivamente se podian deducir que eran URLs y aquellos que contenian "@" al principio. Esto último debido a que es la manera más frecuente de referirse a usuarios de una Red Social. En este caso especifico, tomamos la decisión de que estos casos sean adjudicados a la red social "Instagram". Consdieramos que, si los eliminamos, perdemos una cantidad importante de información.
-    \item En el momento de crear el Diagrama de Entidad Relacioal y su correspondiente Esquema Relacional, tomamos la decisión de establecer como clave primaria aquellos atributos que son códigos. Por esto mismo, le dimos importancia a los id de las sedes en lugar de a su nombre. Asi también tomamos como clave el id de cada pais obtenida de la tabla que contenia los PBI de cada país, además porque en lista-sede-datos contamos con un atributo idéntico (pais\_iso\_3) que nos iba a permitir establecer una conexión entre tablas.
-    \item Como en lista-sedes-datos encontramos la misma cantidad de registros y la misma información que en lista-sedes, tomamos la decisión de utilizar la primera tabla ya que contiene más atributos, y por ende, más información necesaria para analizar.
-% tambien pense en agrergar pq eliminamos nulls de pbi, pero ya lo dijimos antes, no sé
+
+    	\item Al momento de crear el Diagrama de Entidad Relacional y su correspondiente Modelo Relacional, tomamos la decisión de establecer como clave primaria aquellos atributos que son códigos. Por esto mismo, le dimos importancia a los id de las sedes en lugar de a su nombre. Asi también tomamos como clave el id de cada pais obtenida de la tabla que contenia los PBI de cada país, además porque en lista-sede-datos contamos con un atributo idéntico (pais\_iso\_3) que nos iba a permitir establecer una conexión entre tablas.
+
+    	\item En la lista-sede-datos encontramos registros correspondientes al atributo "redes\_sociales" que no eran consistentes a la hora de cargarse. Por lo que, como fue explicado en la sección \textbf{3.1 Limpieza de datos}, mantuvimos los datos que efectivamente se podian deducir que eran URLs, y aquellos que contenian "@" al principio considerandolos como Instagram (Bien podría habe sido Twitter, o X como se llama actualmente). Por otro lado, a todos aquellos que no cumplian alguna de estas dos condiciones, incluidos los Null, los descartamos. Luego, durante las consultas, a todos aquellos que descartamos, los recuperamos a traves de un Outer Join y les colocamos el registro 'SinRedSocial'
+
+	\item Como en lista-sedes-datos encontramos la misma cantidad de registros y la misma información que en lista-sedes, tomamos la decisión de utilizar la primera tabla ya que contiene más atributos, y por ende, más información necesaria para analizar.
+
+    	\item En la tabla que contiene los Pbi per cápita, teniamos varios faltantes. Ante esta situación, encontramos varias opciones,
+considerar el valor mas cercano existente, por ejemplo, considerar el Pbi 2021, si este existiera. Otra opción, la elegida por simpleza, fue eliminar todos aquellos paises sin valor en 2022 pues consideramos que un Pbi puede variar mucho año a año, además que no habia una muestra significativa de paises con este datos en Null.
+
+	\item Por último, una decisión que consideramos de gran importancia es haber realizado las tablas que contenian la cantidad de paises para cada cantidad de sedes y su correspondiente Pbi. Donde, también, en otra consulta nos quedamos con las filas con mayor cantidad de paises a fin de contrar con una muestra significativa para elaborar nuestra conclusión. Además, para esta conclusión, consideramos pertinente también, graficar el Pbi promedio de aquelllos paises con sede contra aquellos con sede.
+
 \end{itemize}
 
 \newpage
@@ -409,7 +419,7 @@ En los distintos procedimientos que llevamos acabo explicados en la sección ant
 Para el analisis de datos, se elaboraron una serie de tablas mediante consultas SQL.
 
 En primer lugar, se consideraron la cantidad de sedes, el número promedio de secciones por sede y el PBI per cápita correspondiente al año 2022 de cada país.
-De acuerdo con los resultados obtenidos en la tabla "pais\_seccciones.csv" (consulte el Anexo para visualizarla), se destaca que Brasil y Estados Unidos son los países con mayor número de sedes, con PBIs de 8918 y 76330, respectivamente. Además, se observa que Mónaco, con un PBI de 240862, y Burundi, con un PBI de 259, son los países con el mayor y el menor PBI, respectivamente, a pesar de no tener sedes. Esto nos hace dudar, en que infulirá la cantidad de sedes argentinas.
+De acuerdo con los resultados obtenidos en la tabla "pais\_seccciones.csv" (consulte el Anexo para visualizarla), se destaca que Brasil y Estados Unidos son los países con mayor número de sedes, con Pbi significativamente distintos. Además, se observa que Mónaco, con un PBI per cápita de 240862, y Burundi, con un PBI per cápita de 259, son los países con el mayor y el menor PBI, respectivamente, a pesar de no tener sedes. Esto nos hace dudar, en que infulirá la cantidad de sedes argentinas.w
 
 \vspace{0.1cm}
 
@@ -426,17 +436,17 @@ En una segundo lugar, se analizó la tabla "region\_pais\_pbi", que incluye info
 
 \vspace{12pt}
 
-En tercera instancia, nos planteamos la siguiente pregunta con respecto a las redes sociales: ¿Cuán variado es, en cada país, el tipo de redes sociales que utilizan las sedes?. Para abordar esta interrogante de manera precisa, se construyó una tabla, se puede consultar en el anexo como 'redes\_por\_pais.csv', que muestra los nombres de los países y la cantidad de redes sociales utilizadas por sus sedes. Al analizar esta tabla, se observó que algunos países como Bélgica y Estados Unidos tienen la máxima cantidad de redes sociales, alcanzando un total de 6. Por otro lado, se identificó que países como Argentina y Haití no tienen presencia en redes sociales en sus sedes.
+En tercera instancia, nos planteamos la siguiente pregunta con respecto a las redes sociales: ¿Cuán variado es, en cada país, el tipo de redes sociales que utilizan las sedes?. Para abordar esta interrogante de manera precisa, se construyó una tabla, la cual se puede consultar en el anexo como 'redes\_por\_pais.csv', que muestra los nombres de los países y la cantidad de redes sociales utilizadas por sus sedes. Al analizar esta tabla, se observó que algunos países como Bélgica y Estados Unidos tienen la máxima cantidad de redes sociales, alcanzando un total de 6. Por otro lado, se identificó que países como Argentina y Haití no tienen presencia en redes sociales en sus sedes.
 
 \vspace{0.1cm}
 
-Por ultimo, tenemos una tabla, 'pais\_sede\_red.csv' en el anexo, donde se han registrado las redes sociales de cada país junto con sus respectivas URL. Se observa que la mayoría de los países cuentan con presencia en Facebook, seguido por Twitter y YouTube, mientras que LinkedIn y Flickr tienen una menor presencia en comparación
+Por último, tenemos una tabla, 'pais\_sede\_red.csv' en el anexo, donde se han registrado las redes sociales de cada país junto con sus respectivas URL. Se observa que la mayoría de los países cuentan con presencia en Facebook, seguido por Twitter y YouTube, mientras que LinkedIn y Flickr tienen una menor presencia en comparación
 
 
 \subsection{Gráficos} \vspace{0.3cm}
 
-Existen otras formas de visualizar datos las cuales mejoran la comprensión de la información. En este trabajo, se realizaron 3 tipos de gráfico, adecuados a los datos, histograma, boxplot, y scatter plot con el fin de entender más aquello que las tablas dicen.
-A continuación, en el gráfico de cantidad de sedes por región se puede observar que América del sur es la región con mayor cantidad de sedes, mientras que Oceanía es la que menos posee.
+Existen otras formas de visualizar datos las cuales mejoran la comprensión de la información. En este trabajo, se realizaron 3 tipos de gráfico, adecuados a los datos, histograma, boxplot, y scatter plot con el fin de entender más aquello que las tablas dicen. \par
+A continuación, en el gráfico de cantidad de sedes por región se puede observar que América del sur es la región con mayor cantidad de sedes, mientras que Oceanía es la que menos posee. Nos gustaría conocer los Pbi de estas regiones a fin de concluir algo.
 
 \vspace{12pt}
 
@@ -449,7 +459,7 @@ A continuación, en el gráfico de cantidad de sedes por región se puede observ
 
 \vspace{12pt}
 
-En el gráfico, se puede ver que Oceanía tiene la mediana más alta en relación con el PBI, mientras que África subsahariana tiene la mediana más baja. Por otro lado, se observa que Europa occidental tiene la sede con el PBI más grande, se puede ver claramente por el outlier que posee, el cual se encuentra más a la derecha en el grafico que los demás. También, podemos destacar que la mediana de Oceania, Ámerica del Norte y Europa Occidental es bastante similar, sin embargo, podemos ver que estos ulitmos dos presentan un "rango" de Pbi mucho más amplio. \par
+En el gráfico de abajo, se puede ver que Oceanía tiene la mediana más alta en relación con el PBI, mientras que África subsahariana tiene la mediana más baja. Por otro lado, se observa que Europa occidental tiene la sede con el PBI más grande, se puede ver claramente por el outlier que posee, el cual se encuentra más a la derecha en el grafico que los demás. También, podemos destacar que la mediana de Oceania, Ámerica del Norte y Europa Occidental es bastante similar, sin embargo, podemos ver que estos ulitmos dos presentan un "rango" de Pbi mucho más amplio. \par
 Consideramos que el boxplot con todas las regiones juntas no aportaba toda la claridad necesaria, en particular, mirando aquellas dos regiones con el menor pbi. Por esto, se realizó otro grafico enfocado en África del norte y cercano oriente y  África subsahariana. A continuación, se pueden ver ambos.
 
 \newpage
@@ -474,8 +484,8 @@ Siguiendo con el último gráfico, se puede observar que los países que no tien
 
 \begin{figure}[!] %% El !, obliga a la imagen a quedarse donde quieras
   \centering
-  \includegraphics[width=1\textwidth]{plot_pbi.png}
-  \caption{ Pbi por region donde Argentina tiene una sede, en este grafico solo se muestra dos las regiones con menor PBI }
+  \includegraphics[width=0.9\textwidth]{plot_pbi.png}
+  \caption{Comparación entre cantidad de sedes y Pbi}
   \label{fig:Tabla 2}
 \end{figure} \vspace{0.1cm}
 
@@ -484,14 +494,14 @@ Siguiendo con el último gráfico, se puede observar que los países que no tien
 
 Como vimos antes, no pudimos terminar de determinar si la cantidad de sedes total tenia una influencia directa sobre el Pbi per Capita de un pais. Entonces, reformulemos nuestra pregunta un poco y veamos también si la muestra de paises por ejemplo con 11 sedes, por ejemplo, es significativa.
 
-\newpage
-
 \begin{figure}[h!]
   \centering
   \includegraphics[width=1\textwidth]{TABLAConclusion1.png}
-  \caption{La tabla muestra la cantidad de paises con determinada cantidad de sedes y el pbi promedio de estos }
+  \caption{La tabla muestra la cantidad de paises con determinada cantidad de sedes y el pbi promedio}
   \label{fig:Tabla Conclusion}
-\end{figure} \vspace{0.1cm}
+\end{figure} 
+
+\newpage
 
 Se puede empezar a vislumbrar que en las filas con una muestra signficativa de paises hay un patrón... 
 
@@ -515,7 +525,6 @@ Ahora si, todo parece indicar que la presencia de sedes argentinas influye de ma
 
 \section{Conclusiones} \vspace{0.3cm}
 
-A raiz de lo visto en la sección anterior, 'Analisis de Datos', consideramos que la respuesta a nuestro problema es clara. Aquellos paises que poseen alguna sede Argentina, en promedio, tienen un Pbi mayor que aquellos que no. Más aún, vimos que cuando dividimos a los paises en cantidad de sedes por paises y tomamos aquellos grupos con muestras de paises significativas, el Pbi tendia también a ser mayor. Como todo, hay paises que se escapan de estas métricas, como por ejemplo, Monaco quien no posee sedes y aún asi es el país con mayo Pbi per cápita del mundo. También, creemos que esta tendencia se debe a que argentina tiene una cantidad baja, por no decir nula, de sedes en áfrica, mientras que en regiones historicamente mas ricas como europa occiddental o norteamerica tiene una fuerte presencia.
-
+A raiz de lo visto en la sección anterior, 'Analisis de Datos', consideramos que la respuesta a nuestro problema es clara. Aquellos paises que poseen alguna sede Argentina, en promedio, tienen un Pbi mayor que aquellos que no. Más aún, vimos que cuando dividimos a los paises en cantidad de sedes por paises y tomamos aquellos grupos con muestras de paises significativas, el Pbi tendia también a ser mayor. Como todo, hay paises que se escapan de estas métricas, como por ejemplo, Monaco quien no posee sedes y aún asi es el país con mayo Pbi per cápita del mundo. También, creemos que esta tendencia se debe a que argentina tiene una cantidad baja, por no decir nula, de sedes en áfrica, mientras que en regiones históricamente mas ricas como europa occiddental o norteamerica tiene una fuerte presencia.
 
 \end{document}

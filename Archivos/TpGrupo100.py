@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Trabajo Práctico 1
+Trabajo Práctico 1 : Cantidad de Sedes Argentinas en el exterior.
 
 Materia : Laboratorio de datos - FCEyN - UBA
 Autores  : Martinelli Lorenzo, Padilla Ramiro, Chapana Joselin
@@ -287,7 +287,7 @@ pais_sede_red.to_csv(Anexo + 'pais_sede_red.csv')
 consultaSQL = """ 
                 SELECT Sedes, 
                        COUNT(*) AS Paises,
-                       AVG("PBI per Cápita 2022 (U$S)") AS Promedio
+                       ROUND(AVG("PBI per Cápita 2022 (U$S)")) AS "Promedio PBI"
                 FROM result
                 GROUP BY Sedes
             """
@@ -296,15 +296,24 @@ prom_por_sede = sql^ consultaSQL
 
 # Agarro solo a aquellos con una muestra de paises relevante
 consultaSQL = """ 
-                SELECT Sedes, 
-                       COUNT(*) AS Paises,
-                       ROUND(AVG("PBI per Cápita 2022 (U$S)")) AS "PBI Promedio"
-                FROM result
-                GROUP BY Sedes
-                HAVING Paises >= 10 
+                SELECT *
+                FROM prom_por_sede
+                WHERE Paises >= 10 
+                ORDER BY Sedes
             """
             
 prom_por_sede_relevante = sql^ consultaSQL
+
+# Paises con Sedes vs Sin Sedes
+consultaSQL = """ 
+                SELECT CASE WHEN Sedes > 0 THEN 1 ELSE 0 END AS Presencia,
+                       ROUND(AVG("PBI per Cápita 2022 (U$S)")) AS Promedio 
+                FROM result
+                GROUP BY Presencia
+                ORDER BY Promedio
+            """
+            
+comparativa = sql^ consultaSQL 
 
 #%% Gráficos
 
@@ -444,6 +453,36 @@ plt.savefig('plot_pbi.png', dpi = 1200)
 
 #%% Gráficos Auxiliares
 
+# Presencia Argentina vs PBI
+fig, ax = plt.subplots()
+
+sns.set_style('darkgrid')
+
+plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['axes.spines.right']  = False           
+plt.rcParams['axes.spines.left']   = True            
+plt.rcParams['axes.spines.top']    = False
+plt.rcParams['axes.spines.bottom'] = True  
+
+    
+sns.barplot(x = comparativa.Presencia, 
+            y = comparativa.Promedio, 
+            width = 0.6,
+            color = 'royalblue')
+
+ax.set_title('Influencia de las sedes Argentinas', fontsize=14, fontweight='bold', pad = 10)
+ax.set_xlabel('Presencia', fontsize = 12)                       
+ax.bar_label(ax.containers[0], fontsize=8)
+ax.set_ylabel('Pbi Promedio (USD)', fontsize= 12, labelpad = 12)
+
+ax.set_ylim(0, 30000)                         
+
+ax.xaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"));
+
+plt.rcParams['figure.figsize'] = [7.50, 5.50]
+plt.rcParams['figure.autolayout'] = True
+
+plt.savefig('plot_conclusion.png', dpi = 1200)
 
 
 #%% Funcion Auxiliar para graficar las tablas
@@ -471,4 +510,4 @@ def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=14,
             cell.set_facecolor(row_colors[k[0]%len(row_colors) ])
     return ax
 
-render_mpl_table(prom_por_sede, header_columns=0, col_width=6.2)
+render_mpl_table(prom_por_sede_relevante, header_columns=0, col_width=6.2)
